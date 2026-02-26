@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+requests
+ffmpeg-python
+python-dotenv
+pydantic
+python-multipart
+yt-dlp
+chromadb
+google-generativeai==0.8.6

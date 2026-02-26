@@ -1,0 +1,23 @@
+{
+  "gemini_web_test_1": {
+    "post_id": "gemini_web_test_1",
+    "source_url": "http://xhslink.com/o/1VWt8ndPZNc",
+    "date": "2026-02-26",
+    "thumbnail_url": "/data/2026-02-26/gemini_web_test_1/keyframes/time_0000.00s.jpg",
+    "actor_ids": [],
+    "clothes_ids": [
+      "7d67e9f2f4"
+    ],
+    "scene_ids": [
+      "9365b003d8",
+      "722fbb7019"
+    ],
+    "video_url": "/data/2026-02-26/gemini_web_test_1/video.mp4",
+    "transcript": "",
+    "topic": "Unknown",
+    "selling_points": [],
+    "tone": "Unknown",
+    "summary": "No speech detected in the video.",
+    "updated_at": "2026-02-26T20:37:45.453769"
+  }
+}

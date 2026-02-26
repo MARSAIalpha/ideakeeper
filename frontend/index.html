@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Asset Library | AI Studio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/frontend/styles.css">
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar">
+            <div class="logo">
+                <div class="logo-icon"></div>
+                <h1>AI Studio<span>.</span></h1>
+            </div>
+            <ul class="nav-links">
+                <li class="active" data-tab="dashboard">Dashboard</li>
+                <li data-tab="actors">Virtual Actors</li>
+                <li data-tab="clothes">🛍 Product Library</li>
+                <li data-tab="scenes">Scene Library</li>
+            </ul>
+            <div class="user-profile">
+                <div class="avatar">V</div>
+                <div class="info">
+                    <span class="name">Asset Manager</span>
+                    <span class="status">Online</span>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <header class="top-header">
+                <div class="header-left">
+                    <button class="btn-hamburger" id="btn-hamburger"
+                        onclick="document.querySelector('.sidebar').classList.toggle('sidebar-open')">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <line x1="3" y1="6" x2="21" y2="6" />
+                            <line x1="3" y1="12" x2="21" y2="12" />
+                            <line x1="3" y1="18" x2="21" y2="18" />
+                        </svg>
+                    </button>
+                    <h2 id="page-title">Resource Dashboard</h2>
+                </div>
+
+                <div class="header-search hidden" id="search-container">
+                    <div class="search-box">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)"
+                            stroke-width="2">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <path d="m21 21-4.3-4.3"></path>
+                        </svg>
+                        <input type="text" id="semantic-search-input"
+                            placeholder="Search by description (e.g. 'Red leather jacket')">
+                        <button class="btn-primary" id="btn-search">Search</button>
+                    </div>
+                </div>
+
+                <div class="header-actions">
+                    <button class="btn-primary" id="btn-generate">Generate Video Pipeline</button>
+                </div>
+            </header>
+
+            <div class="scroll-area">
+                <!-- Stats Overview -->
+                <section class="stats-grid" id="stats-view">
+                    <div class="stat-card">
+                        <div class="stat-icon clothes-icon"></div>
+                        <div class="stat-details">
+                            <h3>Saved Clothes</h3>
+                            <p id="count-clothes">0</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon scenes-icon"></div>
+                        <div class="stat-details">
+                            <h3>Background Scenes</h3>
+                            <p id="count-scenes">0</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Dynamic Content Grids -->
+                <section class="gallery-container hidden" id="actors-view">
+                    <div class="gallery-grid" id="grid-actors"></div>
+                </section>
+
+                <section class="gallery-container hidden" id="clothes-view">
+                    <div class="kb-toolbar" style="margin-bottom: 1rem;">
+                        <h3 style="color: white; margin: 0;">Product Library Spreadsheet</h3>
+                        <span class="kb-count" id="clothes-table-count">0 items</span>
+                    </div>
+                    <div class="kb-table-wrapper" style="max-height: calc(100vh - 200px);">
+                        <table class="kb-table" id="clothes-table">
+                            <thead id="clothes-thead">
+                                <tr>
+                                    <th>Image</th>
+                                    <th>UID Vector</th>
+                                    <th>Name</th>
+                                    <th>Category</th>
+                                    <th>Style</th>
+                                    <th>Color</th>
+                                    <th>Posts</th>
+                                </tr>
+                            </thead>
+                            <tbody id="clothes-tbody"></tbody>
+                        </table>
+                        <div class="kb-empty hidden" id="clothes-empty">
+                            No products extracted yet.
+                        </div>
+                    </div>
+                </section>
+
+                <section class="gallery-container hidden" id="scenes-view">
+                    <div class="gallery-grid" id="grid-scenes"></div>
+                </section>
+
+                <tbody id="kb-tbody"></tbody>
+                </table>
+                <div class="kb-empty hidden" id="kb-empty">
+                    No entries yet. Send a link to the webhook to start building.
+                </div>
+            </div>
+            </section>
+
+            <!-- Dashboard Combined View -->
+            <section class="dashboard-sections" id="dashboard-view">
+                <div style="padding: 2rem; color: var(--text-secondary)">
+                    Initializing intelligence feed...
+                </div>
+            </section>
+    </div>
+    </main>
+    </div>
+
+    <!-- Video Detail Modal -->
+    <div class="modal-overlay hidden" id="modal-video-detail">
+        <div class="modal" style="max-width: 900px; height: 90vh;">
+            <div class="modal-header">
+                <h3 id="detail-title">Video Intelligence</h3>
+                <button class="close-modal">×</button>
+            </div>
+            <div class="detail-modal-body" id="detail-body">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Entity Detail Modal -->
+    <div class="modal-overlay hidden" id="modal-entity-detail">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="entity-detail-title">Entity Detail</h3>
+                <button class="close-modal">×</button>
+            </div>
+            <div class="modal-body" id="entity-detail-body" style="padding:1.5rem 2rem 2rem;">
+                Loading...
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Generate Modal -->
+    <div class="modal hidden" id="generate-modal">
+        <div class="modal-content glass">
+            <h2>Compose New Video</h2>
+            <p>Select assets to embed into the video generation prompt.</p>
+            <div class="modal-body">
+                <!-- Selectors (Mock) -->
+                <div class="selector">
+                    <label>Selected Actor ID</label>
+                    <input type="text" placeholder="e.g. hash_female_model" disabled>
+                </div>
+                <div class="selector">
+                    <label>Selected Clothes ID</label>
+                    <input type="text" placeholder="e.g. hash_white_shirt" disabled>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-secondary" id="btn-cancel">Cancel</button>
+                <button class="btn-primary" disabled>Send to API (Coming Soon)</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- API Docs Modal -->
+    <div class="modal-overlay hidden" id="modal-api-docs">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 style="color: var(--accent);">Openclaw API Integration Logs</h3>
+                <button class="close-modal">×</button>
+            </div>
+            <div class="modal-body" style="text-align: left; max-height: 60vh; overflow-y: auto;">
+                <p style="margin-bottom:1rem;">Welcome! Use the following REST APIs to connect this asset library to
+                    your intelligence workflow.</p>
+
+                <h4 style="margin-top:1.5rem; color: #fff;">1. Ingest Video Link</h4>
+                <div
+                    style="background:#1a1c23; padding:1rem; border-radius:8px; font-family:monospace; font-size:0.85rem; margin-top:0.5rem; white-space:pre-wrap; border: 1px solid var(--border-color);">
+                    POST /webhook/openclaw
+                    Content-Type: application/json
+
+                    {
+                    "url": "https://www.xiaohongshu.com/discovery/item/..."
+                    }</div>
+
+                <h4 style="margin-top:2rem; color: #fff;">2. Retrieve Full Asset Tree</h4>
+                <div
+                    style="background:#1a1c23; padding:1rem; border-radius:8px; font-family:monospace; font-size:0.85rem; margin-top:0.5rem; white-space:pre-wrap; border: 1px solid var(--border-color);">
+                    GET /api/videos/{video_id}
+
+                    // Response Schema:
+                    {
+                    "video_id": "0c094a9503dd",
+                    "video_url": "/data/...",
+                    "audio_url": "/data/...",
+                    "script_analysis": {
+                    "transcript": "...",
+                    "analysis": { "topic": "...", "tone": "..." }
+                    },
+                    "assets": {
+                    "actors": [{ "url": "..." }],
+                    "clothes": [{ "url": "..." }],
+                    "scenes": [{ "url": "..." }]
+                    }
+                    }</div>
+            </div>
+        </div>
+
+        <!-- Mobile Bottom Tab Bar -->
+        <nav class="bottom-tab-bar" id="bottom-tabs">
+            <button class="tab-item active" data-tab="dashboard">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                    <polyline points="9 22 9 12 15 12 15 22" />
+                </svg>
+                <span>Home</span>
+            </button>
+            <button class="tab-item" data-tab="search-tab">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8" />
+                    <path d="m21 21-4.3-4.3" />
+                </svg>
+                <span>Search</span>
+            </button>
+            <button class="tab-item tab-add" id="btn-add-mobile">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <line x1="12" y1="5" x2="12" y2="19" />
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+            </button>
+            <button class="tab-item" data-tab="kb">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+                </svg>
+                <span>Library</span>
+            </button>
+            <button class="tab-item" data-tab="clothes">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
+                    <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
+                </svg>
+                <span>Assets</span>
+            </button>
+        </nav>
+    </div>
+
+    <script src="/frontend/app.js"></script>
+</body>
+
+</html>
