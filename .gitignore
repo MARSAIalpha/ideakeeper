@@ -7,3 +7,12 @@ __pycache__/
 venv/
 .DS_Store
 .env
+
+# User profile and scraping data
+taobao_profile/
+test_taobao_out/
+debug_*.html
+debug_*.txt
+*.log
+test_*.py
+test_*.html
