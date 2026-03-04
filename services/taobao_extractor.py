@@ -114,47 +114,116 @@ async def fetch_taobao_media(url: str, dest_dir: Path) -> dict:
     """
     Fetches a Taobao/Tmall product page, extracts embedded video URLs,
     and downloads the video directly to dest_dir/video.mp4.
-    
-    Strategy:
-      1. Playwright + Desktop UA + cookie injection → renders the full page JS
-         and parses the resulting HTML for .mp4 URLs. This is the only reliable
-         method since Taobao serves JS-only stubs to plain HTTP requests.
-      2. Mobile API fallback for simple cases.
-    
-    Returns dict with same shape as ingestion.fetch_media():
-        {"type": "video", "video_path": Path}  — on success
-        {"type": "none"}                         — on failure
     """
     print(f"[Taobao] Fetching product page: {url}")
     session = requests.Session()
 
-    # --- Strategy 1: Playwright with Desktop UA (primary, most reliable) ---
-    video_urls = await _extract_video_url_with_playwright(url)
+    # --- Strategy 1: Playwright with Desktop UA ---
+    video_urls, thumbnail_path, image_urls, attributes = await _extract_video_url_with_playwright(url, dest_dir)
 
-    # --- Strategy 2: Direct mobile API (fallback for item IDs) ---
-    if not video_urls:
+    # --- Strategy 1B: Fallback HTML Regex for images ---
+    if not image_urls:
+        print("[Taobao] Playwright found no images, trying raw HTML extraction...")
+        try:
+            r = session.get(url, headers=HEADERS, timeout=15)
+            r.encoding = 'utf-8'
+            html = r.text
+            import re
+            raw_imgs = re.findall(r'(?:https?:)?//(?:img\.alicdn\.com|gw\.alicdn\.com)[^\s",\\]+(?:\.jpg|\.png)', html)
+            for img in raw_imgs:
+                high_res = re.sub(r'_\d+x\d+.*\.jpg$', '', img)
+                high_res = re.sub(r'_\.webp$', '', high_res)
+                if 'TB1' not in high_res and 'icon' not in high_res.lower() and 'blank' not in high_res.lower():
+                    image_urls.append(high_res)
+            image_urls = list(set(image_urls))
+        except Exception as e:
+            print(f"[Taobao] Raw HTML fallback error: {e}")
+
+    # --- Strategy 2: Direct mobile API ---
+    if not video_urls and not image_urls:
         video_urls = _try_taobao_mobile_api(url, session)
 
-    if not video_urls:
-        print("[Taobao] Could not locate any video in this product page.")
+    if not video_urls and not image_urls:
+        print("[Taobao] Could not locate any media in this product page.")
         return {"type": "none"}
 
-    print(f"[Taobao] Found {len(video_urls)} candidate video(s).")
-    return _download_video(video_urls[0], dest_dir, session)
+    print(f"[Taobao] Found {len(video_urls)} candidate video(s) and {len(image_urls)} candidate image(s) after selective filtering.")
+    if video_urls:
+        print(f"[Taobao] First video URL: {video_urls[0][:100]}...")
+    
+    result = {"type": "none"}
+    if video_urls:
+        result = _download_video(video_urls[0], dest_dir, session)
+        
+    images_dir = dest_dir / "images"
+    downloaded_images = []
+    if image_urls:
+        images_dir.mkdir(parents=True, exist_ok=True)
+        for i, img_url in enumerate(list(set(image_urls))[:50]):
+            ext = img_url.split('.')[-1].split('?')[0]
+            if ext not in ['jpg', 'jpeg', 'png', 'webp']:
+                ext = 'jpg'
+            img_path = images_dir / f"image_{i+1:03d}.{ext}"
+            
+            if img_url.startswith('//'):
+                img_url = 'https:' + img_url
+            elif not img_url.startswith('http'):
+                continue
+                
+            try:
+                r = session.get(img_url, headers=HEADERS, stream=True, timeout=10)
+                if r.status_code == 200:
+                    with open(img_path, 'wb') as f:
+                        for chunk in r.iter_content(1024 * 64):
+                            f.write(chunk)
+                    if img_path.stat().st_size > 5000:
+                        downloaded_images.append(img_path)
+                    else:
+                        img_path.unlink()
+            except Exception as e:
+                pass
+                
+        print(f"[Taobao] Downloaded {len(downloaded_images)} images.")
+    
+    if video_urls and downloaded_images:
+        result["type"] = "video_and_images"
+        result["image_paths"] = downloaded_images
+    elif downloaded_images:
+        result["type"] = "images"
+        result["image_paths"] = downloaded_images
+
+    if thumbnail_path and thumbnail_path.exists():
+        result["thumbnail_path"] = thumbnail_path
+        
+    # Add extracted attributes to the result
+    if attributes:
+        result["attributes"] = attributes
+        print(f"[Taobao] Extracted {len(attributes)} product attributes.")
+        
+    return result
 
 
-
-
-async def _extract_video_url_with_playwright(url: str) -> list[str]:
-    """Use Playwright with Desktop UA + optional cookie injection to render the page."""
+async def _extract_video_url_with_playwright(url: str, dest_dir: Path) -> tuple[list[str], Path | None, list[str], dict]:
+    """Use Playwright to render the page and capture media + attributes."""
     print("[Taobao] Attempting Playwright extraction...")
     extracted_urls = set()
+    extracted_images = set()
+    extracted_attributes = {}
+    thumbnail_path = None
     try:
+        profile_dir = Path(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "taobao_profile")))
+        profile_dir.mkdir(parents=True, exist_ok=True)
+        
         async with async_playwright() as p:
-            browser = await p.chromium.launch(headless=True)
-            context = await browser.new_context(user_agent=_DESKTOP_UA)
-
-            # Inject TAOBAO_COOKIE if available for login bypass
+            desktop_ua = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
+            context = await p.chromium.launch_persistent_context(
+                user_data_dir=str(profile_dir),
+                headless=False,
+                slow_mo=500,
+                user_agent=desktop_ua,
+                viewport={"width": 1280, "height": 800}
+            )
+            
             tb_cookie = os.getenv("TAOBAO_COOKIE")
             if tb_cookie:
                 cookies = []
@@ -164,66 +233,188 @@ async def _extract_video_url_with_playwright(url: str) -> list[str]:
                         cookies.append({"name": k, "value": v, "domain": ".taobao.com", "path": "/"})
                         cookies.append({"name": k, "value": v, "domain": ".tmall.com", "path": "/"})
                 await context.add_cookies(cookies)
-                print("[Taobao] Injected login cookies from TAOBAO_COOKIE")
-            else:
-                print("[Taobao] No TAOBAO_COOKIE set — proceeding without auth")
+            
             page = await context.new_page()
             
-            # Watch for video-like network requests
             def on_response(response):
                 low_url = response.url.lower()
                 if ".mp4" in low_url or ".m3u8" in low_url or response.request.resource_type == "media":
                     extracted_urls.add(response.url)
+                if "alicdn.com" in low_url or "tbcdn.cn" in low_url or response.request.resource_type == "image":
+                    if any(ext in low_url for ext in [".jpg", ".png", ".webp", ".jpeg"]):
+                        extracted_images.add(response.url)
             
             page.on("response", on_response)
             
             try:
                 print(f"[Taobao] Navigating to {url}")
-                await page.goto(url, wait_until="load", timeout=45000)
-                # Wait for potential lazy loading / player initialization
-                for _ in range(3):
-                    await asyncio.sleep(2)
-                    # Force scroll to trigger lazy loads
-                    await page.mouse.wheel(0, 500)
+                await page.goto(url, wait_until="commit", timeout=60000)
                 
-                # Also parse the full HTML for embedded video URLs
-                html = await page.content()
-                html_urls = _extract_video_urls_from_html(html)
-                for u in html_urls:
-                    extracted_urls.add(u)
+                try:
+                    await page.wait_for_selector(".detail-content, .desc-img, #desc, #J_DivItemDesc, .Attributes-list", timeout=10000)
+                except:
+                    pass
                 
-                # Check video tags more thoroughly
-                video_srcs = await page.evaluate("""
+                # Scroll to reveal all content
+                for _ in range(10):
+                    await asyncio.sleep(0.5)
+                    await page.evaluate("window.scrollBy(0, window.innerHeight);")
+                
+                # Debug: dump text to see what we have
+                page_text = await page.evaluate("document.body.innerText.substring(0, 2000)")
+                print(f"[Taobao] Page Text Extract: {page_text.replace('\\n', ' ')}")
+                
+                # Capture attributes first
+                extracted_attributes = await page.evaluate(r"""
                     () => {
-                        const srcs = [];
-                        document.querySelectorAll('video').forEach(v => {
-                            if (v.src) srcs.push(v.src);
-                            v.querySelectorAll('source').forEach(s => {
-                                if (s.src) srcs.push(s.src);
-                            });
+                        const attrs = {};
+                        console.log("Starting attribute extraction JS...");
+                        
+                        // Helper to add attribute
+                        const addAttr = (k, v) => {
+                            if (k && v && typeof k === 'string' && typeof v === 'string') {
+                                const cleanK = k.trim().replace(/[:：\s]/g, '');
+                                const cleanV = v.trim();
+                                if (cleanK && cleanV) {
+                                    attrs[cleanK] = cleanV;
+                                    console.log(`Extracted: ${cleanK} = ${cleanV}`);
+                                }
+                            }
+                        };
+
+                        // 1. Common table-like attributes
+                        const listItems = document.querySelectorAll('#J_AttrUL li, .params-list li, .Attributes-list li, .attrs-list li, .p-list li, .tm-attr-list li, [class*="emphasisParamsInfoItem"]');
+                        console.log(`Found ${listItems.length} candidate list items`);
+                        
+                        listItems.forEach(li => {
+                            // Check for internal label/value pairs first (new Tmall layout)
+                            const labelEl = li.querySelector('[class*="SubTitle"], .label, .name, .attr-name');
+                            const valueEl = li.querySelector('[class*="Title"], .value, .val, .attr-value');
+                            
+                            if (labelEl && valueEl) {
+                                addAttr(labelEl.innerText, valueEl.innerText);
+                            } else {
+                                // Fallback to colon-separated text
+                                let text = li.innerText.trim();
+                                if (text.includes(':') || text.includes('：')) {
+                                    const parts = text.split(/[:：]/);
+                                    if (parts.length >= 2) {
+                                        addAttr(parts[0], parts.slice(1).join(':'));
+                                    }
+                                }
+                            }
                         });
-                        return srcs;
+
+                        // 2. Grid-like parameters
+                        const gridItems = document.querySelectorAll('.param-item, .attribute-item, .spec-item, .tm-attribute-item');
+                        gridItems.forEach(item => {
+                            const k = item.querySelector('.label, .name, .attr-name')?.innerText.trim();
+                            const v = item.querySelector('.value, .val, .attr-value')?.innerText.trim();
+                            addAttr(k, v);
+                        });
+
+                        // 3. Simple text pairs in div/span
+                        document.querySelectorAll('.prop-item, .p-prop').forEach(item => {
+                             const spans = item.querySelectorAll('span');
+                             if (spans.length >= 2) {
+                                 addAttr(spans[0].innerText, spans[1].innerText);
+                             }
+                        });
+
+                        // 4. Try extract from window variables
+                        try {
+                            const scripts = Array.from(document.querySelectorAll('script')).map(s => s.innerText);
+                            for (const script of scripts) {
+                                if (script.includes('apiStack') || script.includes('__INITIAL_DATA__')) {
+                                    const brandMatch = script.match(/"品牌":"([^"]+)"/) || script.match(/"brandName":"([^"]+)"/);
+                                    if (brandMatch) addAttr("品牌", brandMatch[1]);
+                                    
+                                    const snMatch = script.match(/"货号":"([^"]+)"/) || script.match(/"model":"([^"]+)"/);
+                                    if (snMatch) addAttr("货号", snMatch[1]);
+                                }
+                            }
+                        } catch (e) {}
+
+                        return attrs;
                     }
                 """)
-                for v in video_srcs:
-                    if v: extracted_urls.add(v)
+                print(f"[Taobao] Extracted {len(extracted_attributes)} attributes")
+                
+                # Capture screenshot
+                try:
+                    dest_dir.mkdir(parents=True, exist_ok=True)
+                    thumbnail_path = dest_dir / "thumbnail.jpg"
+                    await page.screenshot(path=str(thumbnail_path), full_page=False)
+                except:
+                    thumbnail_path = None
+                
+                # Extract images
+                image_srcs = await page.evaluate(r"""
+                    () => {
+                        const imgs = [];
+                        const addUrl = (url) => {
+                            if (!url || typeof url !== 'string') return;
+                            let clean = url.trim();
+                            if (clean.startsWith('//')) clean = 'https:' + clean;
+                            if (!clean.startsWith('http')) return;
+                            if (clean.includes('.gif') || clean.includes('icon') || clean.includes('blank') || clean.includes('spacer')) return;
+                            // Clean Taobao thumbnail suffixes
+                            clean = clean.replace(/_\d+x\d+.*\.jpg$/, '').replace(/_.webp$/, '').replace(/_\d+x\d+.*\.png$/, '');
+                            if (!imgs.includes(clean)) imgs.push(clean);
+                        };
+
+                        // 1. Look for main product image containers (High priority)
+                        const selectors = [
+                            '#J_UlThumb',                // Taobao Desktop Thumbs
+                            '.tm-detail-gallery',        // Tmall Desktop Gallery
+                            '.main-img',                 // Common Tmall
+                            '#J_ImgCanvas',              // Taobao Main
+                            '.module-adds',              // Detail images (often huge)
+                            '.desc_anchor',              // Description area
+                            '#description',              // Description area
+                            '.ke-post'                   // Rich text content
+                        ];
+                        
+                        selectors.forEach(sel => {
+                            const container = document.querySelector(sel);
+                            if (container) {
+                                container.querySelectorAll('img').forEach(img => {
+                                    let src = img.getAttribute('data-src') || img.src || img.getAttribute('data-ks-lazyload') || img.getAttribute('data-actualsrc') || img.getAttribute('original');
+                                    if (src && !src.includes('TB1') && !src.includes('icon')) {
+                                        addUrl(src);
+                                    }
+                                });
+                            }
+                        });
+
+                        // 2. Fallback: if nothing found, grab large images only
+                        if (imgs.length === 0) {
+                            document.querySelectorAll('img').forEach(img => {
+                                if (img.width > 300 || img.height > 300) {
+                                    let src = img.getAttribute('data-src') || img.src;
+                                    addUrl(src);
+                                }
+                            });
+                        }
+                        return imgs;
+                    }
+                """)
+                for i in image_srcs:
+                    if i: extracted_images.add(i)
                 
             except Exception as e:
                 print(f"[Taobao] Playwright navigation error: {e}")
             finally:
-                await browser.close()
+                await context.close()
     except Exception as e:
         print(f"[Taobao] Playwright setup error: {e}")
 
-    print(f"[Taobao] Playwright raw URLs found: {len(extracted_urls)}")
-    for u in extracted_urls:
-        if "alicdn.com" in u:
-            print(f"  - Found candidate: {u[:100]}...")
-
-    # Filter for actually valid CDN links (alicdn.com or cloud.video.taobao.com)
-    return [u for u in extracted_urls
+    valid_urls = [u for u in extracted_urls
             if (".mp4" in u or "video" in u.lower())
             and ("alicdn.com" in u or "cloud.video.taobao.com" in u)]
+            
+    final_images = sorted(list(set(extracted_images)))
+    return valid_urls, thumbnail_path, final_images, extracted_attributes
 
 
 def _try_taobao_mobile_api(url: str, session: requests.Session) -> list[str]:

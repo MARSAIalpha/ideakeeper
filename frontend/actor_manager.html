@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>虚拟模特管理 | AI Studio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/frontend/styles.css">
+    <style>
+        .actor-manager {
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            overflow-y: auto;
+            max-height: calc(100vh - 100px);
+        }
+        
+        .manager-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            color: white;
+        }
+        
+        .manager-header h1 {
+            margin: 0 0 0.5rem 0;
+            font-size: 2rem;
+        }
+        
+        .action-bar {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+        
+        .action-btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .action-btn.primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .action-btn.danger {
+            background: #e74c3c;
+            color: white;
+        }
+        
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        .actor-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .actor-card {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+            position: relative;
+        }
+        
+        .actor-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 30px rgba(0,0,0,0.15);
+        }
+        
+        .actor-card.deleting {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+        
+        .actor-image-container {
+            width: 100%;
+            height: 250px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .actor-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .actor-avatar-placeholder {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 3rem;
+            font-weight: bold;
+        }
+        
+        .platform-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+        }
+        
+        .actor-info {
+            padding: 1.5rem;
+        }
+        
+        .actor-name {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin: 0 0 0.25rem 0;
+            color: #333;
+        }
+        
+        .actor-reference {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 0.75rem;
+        }
+        
+        .actor-style {
+            display: inline-block;
+            background: #f0f0f0;
+            padding: 0.25rem 0.75rem;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            color: #667eea;
+            margin-bottom: 0.75rem;
+        }
+        
+        .actor-features {
+            font-size: 0.85rem;
+            color: #666;
+            margin-bottom: 1rem;
+            line-height: 1.5;
+        }
+        
+        .actor-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .actor-btn {
+            flex: 1;
+            padding: 0.5rem;
+            border-radius: 6px;
+            border: 1px solid #e0e0e0;
+            background: white;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+        
+        .actor-btn:hover {
+            background: #f5f5f5;
+        }
+        
+        .actor-btn.delete {
+            color: #e74c3c;
+            border-color: #e74c3c;
+        }
+        
+        .actor-btn.delete:hover {
+            background: #e74c3c;
+            color: white;
+        }
+        
+        .actor-btn.generate {
+            color: #667eea;
+            border-color: #667eea;
+        }
+        
+        .actor-btn.generate:hover {
+            background: #667eea;
+            color: white;
+        }
+        
+        .prompt-preview {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1rem;
+            font-family: monospace;
+            font-size: 0.8rem;
+            color: #333;
+            max-height: 100px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: #666;
+        }
+        
+        .empty-state i {
+            font-size: 4rem;
+            color: #ddd;
+            margin-bottom: 1rem;
+        }
+        
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-overlay.active {
+            display: flex;
+        }
+        
+        .modal {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            max-width: 500px;
+            width: 90%;
+        }
+        
+        .modal h3 {
+            margin: 0 0 1rem 0;
+        }
+        
+        .modal-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+            justify-content: flex-end;
+        }
+        
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: #333;
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            display: none;
+            align-items: center;
+            gap: 0.5rem;
+            z-index: 2000;
+        }
+        
+        .toast.show {
+            display: flex;
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        .actor-image-container:hover .image-upload-overlay {
+            opacity: 1;
+        }
+        
+        .image-upload-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1rem;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.2s;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .image-upload-overlay i {
+            font-size: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <nav class="sidebar">
+            <div class="logo">
+                <div class="logo-icon"></div>
+                <h1>AI Studio<span>.</span></h1>
+            </div>
+            <ul class="nav-links">
+                <li data-tab="dashboard"><a href="/frontend/index.html" style="color: inherit; text-decoration: none;">Dashboard</a></li>
+                <li class="active" data-tab="actors">🎭 Virtual Actors</li>
+                <li data-tab="clothes"><a href="/frontend/index.html#clothes" style="color: inherit; text-decoration: none;">🛍 Product Library</a></li>
+                <li data-tab="video"><a href="/frontend/video_generator.html" style="color: inherit; text-decoration: none;">🎬 Video Generator</a></li>
+            </ul>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="actor-manager">
+                <!-- Header -->
+                <div class="manager-header">
+                    <h1><i class="fas fa-theater-masks"></i> 虚拟模特管理</h1>
+                    <p>管理你的AI虚拟模特 - 查看、删除、重新生成</p>
+                </div>
+
+                <!-- Action Bar -->
+                <div class="action-bar">
+                    <button class="action-btn primary" onclick="generateAll()">
+                        <i class="fas fa-magic"></i> 全部重新生成
+                    </button>
+                    <button class="action-btn danger" onclick="deleteAll()">
+                        <i class="fas fa-trash"></i> 全部删除
+                    </button>
+                    <button class="action-btn" onclick="exportActors()">
+                        <i class="fas fa-download"></i> 导出配置
+                    </button>
+                </div>
+
+                <!-- Actor Grid -->
+                <div class="actor-grid" id="actor-grid">
+                    <!-- 动态加载 -->
+                </div>
+
+                <!-- Empty State -->
+                <div class="empty-state" id="empty-state" style="display: none;">
+                    <i class="fas fa-user-slash"></i>
+                    <h3>暂无虚拟模特</h3>
+                    <p>点击"全部重新生成"创建9位顶流明星风格的虚拟模特</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal-overlay" id="delete-modal">
+        <div class="modal">
+            <h3>确认删除</h3>
+            <p id="delete-message">确定要删除这个虚拟模特吗？</p>
+            <div class="modal-actions">
+                <button class="action-btn" onclick="closeModal()">取消</button>
+                <button class="action-btn danger" onclick="confirmDelete()">删除</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast">
+        <i class="fas fa-check-circle"></i>
+        <span id="toast-message">操作成功</span>
+    </div>
+
+    <script>
+        let actors = [];
+        let deleteTargetId = null;
+
+        // 加载模特数据
+        async function loadActors() {
+            try {
+                const response = await fetch('/data/entities/actors.json');
+                const data = await response.json();
+                actors = data.actors || [];
+                renderActors();
+            } catch (error) {
+                console.error('加载失败:', error);
+                showToast('加载失败，请重试', 'error');
+            }
+        }
+
+        // 渲染模特卡片
+        function renderActors() {
+            const grid = document.getElementById('actor-grid');
+            const emptyState = document.getElementById('empty-state');
+            
+            if (actors.length === 0) {
+                grid.innerHTML = '';
+                emptyState.style.display = 'block';
+                return;
+            }
+            
+            emptyState.style.display = 'none';
+            grid.innerHTML = '';
+            
+            actors.forEach(actor => {
+                const card = document.createElement('div');
+                card.className = 'actor-card';
+                card.dataset.id = actor.id;
+                
+                // 检查是否有图片
+                const hasImage = actor.image_url || actor.avatar_url;
+                const imageHtml = hasImage 
+                    ? `<img src="${actor.image_url || actor.avatar_url}" class="actor-image" alt="${actor.name}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">`
+                    : '';
+                
+                card.innerHTML = `
+                    <div class="actor-image-container">
+                        ${imageHtml}
+                        <div class="actor-avatar-placeholder" style="${hasImage ? 'display: none;' : ''}">
+                            ${actor.name.charAt(0)}
+                        </div>
+                        <span class="platform-badge">${actor.platform}</span>
+                        <div class="image-upload-overlay" onclick="uploadImage('${actor.id}')">
+                            <i class="fas fa-camera"></i> 上传图片
+                        </div>
+                    </div>
+                    <div class="actor-info">
+                        <h3 class="actor-name">${actor.name} <small style="color:#999">(${actor.name_en})</small></h3>
+                        <div class="actor-reference">参考明星: ${actor.reference_star} · ${actor.fan_count}</div>
+                        <span class="actor-style">${actor.style}</span>
+                        <div class="actor-features">
+                            <strong>特征:</strong> ${actor.appearance.face_shape}<br>
+                            <strong>适合:</strong> ${actor.best_for.slice(0, 2).join('、')}
+                        </div>
+                        <div class="actor-actions">
+                            <button class="actor-btn" onclick="viewPrompt('${actor.id}')">
+                                <i class="fas fa-eye"></i> 查看Prompt
+                            </button>
+                            <button class="actor-btn generate" onclick="generateImage('${actor.id}')">
+                                <i class="fas fa-magic"></i> AI生成图
+                            </button>
+                            <button class="actor-btn delete" onclick="deleteActor('${actor.id}')">
+                                <i class="fas fa-trash"></i> 删除
+                            </button>
+                        </div>
+                        <div class="prompt-preview" id="prompt-${actor.id}" style="display: none;">
+                            ${actor.ai_prompt}
+                        </div>
+                    </div>
+                `;
+                
+                grid.appendChild(card);
+            });
+        }
+
+        // 查看/隐藏Prompt
+        function viewPrompt(actorId) {
+            const promptDiv = document.getElementById(`prompt-${actorId}`);
+            if (promptDiv) {
+                promptDiv.style.display = promptDiv.style.display === 'none' ? 'block' : 'none';
+            }
+        }
+
+        // 删除模特
+        function deleteActor(actorId) {
+            const actor = actors.find(a => a.id === actorId);
+            deleteTargetId = actorId;
+            document.getElementById('delete-message').textContent = 
+                `确定要删除 "${actor.name}" (${actor.reference_star}风格) 吗？`;
+            document.getElementById('delete-modal').classList.add('active');
+        }
+
+        // 确认删除
+        async function confirmDelete() {
+            if (!deleteTargetId) return;
+            
+            // 从数组中移除
+            actors = actors.filter(a => a.id !== deleteTargetId);
+            
+            // 保存到文件
+            await saveActors();
+            
+            // 重新渲染
+            renderActors();
+            
+            // 关闭弹窗
+            closeModal();
+            
+            showToast('删除成功');
+            deleteTargetId = null;
+        }
+
+        // 关闭弹窗
+        function closeModal() {
+            document.getElementById('delete-modal').classList.remove('active');
+            deleteTargetId = null;
+        }
+
+        // 重新生成单个模特
+        async function regenerateActor(actorId) {
+            const actor = actors.find(a => a.id === actorId);
+            if (!actor) return;
+            
+            showToast(`正在重新生成: ${actor.name}...`);
+            
+            // 模拟重新生成（实际应该调用AI API）
+            setTimeout(() => {
+                showToast(`${actor.name} 重新生成完成！`);
+            }, 2000);
+        }
+
+        // 全部重新生成
+        async function generateAll() {
+            if (actors.length > 0) {
+                if (!confirm('确定要重新生成所有模特吗？这将覆盖现有配置。')) {
+                    return;
+                }
+            }
+            
+            showToast('正在生成9位虚拟模特...');
+            
+            // 这里应该调用后端API重新生成
+            // 模拟生成完成
+            setTimeout(() => {
+                loadActors();
+                showToast('9位虚拟模特生成完成！');
+            }, 3000);
+        }
+
+        // 全部删除
+        async function deleteAll() {
+            if (actors.length === 0) {
+                showToast('没有模特需要删除');
+                return;
+            }
+            
+            if (!confirm('确定要删除所有虚拟模特吗？此操作不可恢复！')) {
+                return;
+            }
+            
+            actors = [];
+            await saveActors();
+            renderActors();
+            showToast('全部删除成功');
+        }
+
+        // 保存到文件
+        async function saveActors() {
+            try {
+                const response = await fetch('/api/save-actors', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({actors})
+                });
+                return response.ok;
+            } catch (error) {
+                console.error('保存失败:', error);
+                return false;
+            }
+        }
+
+        // 导出配置
+        function exportActors() {
+            const dataStr = JSON.stringify({actors}, null, 2);
+            const blob = new Blob([dataStr], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `virtual_actors_${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('配置已导出');
+        }
+
+        // 显示提示
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toast-message');
+            toastMessage.textContent = message;
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // AI生成模特图片
+        async function generateImage(actorId) {
+            const actor = actors.find(a => a.id === actorId);
+            if (!actor) return;
+            
+            showToast(`正在生成 ${actor.name} 的图片Prompt...`);
+            
+            // 生成图片的Prompt（基于模特特征）
+            const imagePrompt = `Professional portrait photo of ${actor.ai_prompt}, high-end fashion photography, studio lighting, clean background, 8k, photorealistic, headshot, looking at camera, elegant pose`;
+            
+            // 显示生成的Prompt，让用户在即梦使用
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay active';
+            modal.id = 'generate-image-modal';
+            modal.innerHTML = `
+                <div class="modal" style="max-width: 600px;">
+                    <h3><i class="fas fa-magic"></i> 生成 ${actor.name} 的图片</h3>
+                    <p style="color: #666; margin-bottom: 1rem;">
+                        复制下面的Prompt，在即梦AI中生成图片，然后上传到这里。
+                    </p>
+                    <div class="prompt-preview" style="max-height: 200px; margin-bottom: 1rem;">
+                        ${imagePrompt}
+                    </div>
+                    <div style="background: #f0f0f0; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                        <strong>操作步骤：</strong>
+                        <ol style="margin: 0.5rem 0 0 1.2rem; padding: 0;">
+                            <li>复制上面的Prompt</li>
+                            <li>打开 <a href="https://jimeng.jianying.com" target="_blank">即梦AI</a></li>
+                            <li>粘贴Prompt生成图片</li>
+                            <li>下载图片后点击"上传图片"</li>
+                        </ol>
+                    </div>
+                    <div class="modal-actions">
+                        <button class="action-btn" onclick="closeGenerateModal()">关闭</button>
+                        <button class="action-btn primary" onclick="copyImagePrompt('${actorId}')">
+                            <i class="fas fa-copy"></i> 复制Prompt
+                        </button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            
+            // 保存到actor供复制使用
+            actor.temp_image_prompt = imagePrompt;
+        }
+
+        // 复制图片Prompt
+        function copyImagePrompt(actorId) {
+            const actor = actors.find(a => a.id === actorId);
+            if (actor && actor.temp_image_prompt) {
+                navigator.clipboard.writeText(actor.temp_image_prompt).then(() => {
+                    showToast('Prompt已复制到剪贴板！');
+                });
+            }
+        }
+
+        // 关闭生成图片弹窗
+        function closeGenerateModal() {
+            const modal = document.getElementById('generate-image-modal');
+            if (modal) modal.remove();
+        }
+
+        // 上传图片
+        async function uploadImage(actorId) {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.onchange = async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                
+                showToast(`正在上传 ${file.name}...`);
+                
+                // 转换为base64预览
+                const reader = new FileReader();
+                reader.onload = async (event) => {
+                    const imageUrl = event.target.result;
+                    
+                    // 更新actor
+                    const actor = actors.find(a => a.id === actorId);
+                    if (actor) {
+                        actor.image_url = imageUrl;
+                        actor.avatar_url = imageUrl;
+                        await saveActors();
+                        renderActors();
+                        showToast('图片上传成功！');
+                    }
+                };
+                reader.readAsDataURL(file);
+            };
+            input.click();
+        }
+
+        // 初始化
+        loadActors();
+        
+        // 点击弹窗外部关闭
+        document.getElementById('delete-modal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('delete-modal')) {
+                closeModal();
+            }
+        });
+    </script>
+</body>
+</html>

@@ -8,6 +8,8 @@ import asyncio
 from pathlib import Path
 from dotenv import load_dotenv
 
+load_dotenv()
+
 from services.ingestion import IngestionRequest, get_video_id, fetch_no_watermark_video, fetch_media
 from services.storage import create_video_workspace, save_file, DATA_DIR
 from services.processor import extract_keyframes
@@ -16,23 +18,24 @@ from services.audio_extractor import extract_audio
 from services.transcriber import transcribe_audio
 from services.script_analyzer import analyze_transcript
 
-load_dotenv()
-
 app = FastAPI(title="Video Asset Library Pipeline")
 
 # Mount frontend and data directories
 app.mount("/frontend", StaticFiles(directory="frontend"), name="frontend")
-app.mount("/data", StaticFiles(directory="data"), name="data")
+os.makedirs(DATA_DIR, exist_ok=True)
+app.mount("/data", StaticFiles(directory=str(DATA_DIR)), name="data")
 
 from services.segmenter import extract_clothes_render
 from services.classifier import classify_actor, classify_clothes
 from services.entity_store import upsert_actor, upsert_clothes, upsert_scene, upsert_post
 
-def _run_vla_on_frames(frames: list, workspace: dict, video_id: str) -> dict:
+def _run_vla_on_frames(frames: list, workspace: dict, video_id: str, single_product: bool = False, attributes: dict = None) -> dict:
     """
     Run Qwen-VL on frames with color-based deduplication:
     - Clothes: group by (detected_category, detected_color).
     - Aggregate multi-angle descriptions and images into a single product entry.
+    - If single_product is True, all clothes found are merged into one entry.
+    - If attributes are provided (e.g. from Taobao scraping), they are incorporated into the metadata.
     """
     from services.vector_store import add_asset_to_vector_store
     
@@ -93,8 +96,27 @@ def _run_vla_on_frames(frames: list, workspace: dict, video_id: str) -> dict:
     # PASS 2: Group by (Category, Color) → Aggregate Angles
     # ══════════════════════════════════════════════════════════════════════
     if clothes_candidates:
-        groups = _group_clothes_by_color_category(clothes_candidates)
-        print(f"[{video_id}] Found {len(groups)} unique product(s) by color/category grouping")
+        if single_product:
+            # Filter noise (sidebar recommendations): keep only the most common (Category, Color)
+            # Prioritize candidates from the main gallery if available
+            from collections import Counter
+            
+            # 1. Prefer gallery images (directly from product main area)
+            gallery_candidates = [c for c in clothes_candidates if "gallery_" in str(c["frame"])]
+            active_pool = gallery_candidates if gallery_candidates else clothes_candidates
+            
+            counts = Counter((c["category"], c["color"]) for c in active_pool)
+            if counts:
+                main_key = counts.most_common(1)[0][0]
+                filtered = [c for c in active_pool if (c["category"], c["color"]) == main_key]
+                print(f"[{video_id}] Noise filtering: kept {len(filtered)}/{len(clothes_candidates)} images matching {main_key}")
+                groups = [filtered]
+            else:
+                groups = [clothes_candidates]
+            print(f"[{video_id}] Forced single product grouping")
+        else:
+            groups = _group_clothes_by_color_category(clothes_candidates)
+            print(f"[{video_id}] Found {len(groups)} unique product(s) by color/category grouping")
 
         for group in groups:
             # Aggregate details
@@ -127,19 +149,32 @@ def _run_vla_on_frames(frames: list, workspace: dict, video_id: str) -> dict:
                 c_cls["category"] = best_item["category"]
                 c_cls["source_keyframe"] = f"/data/{best_item['frame'].relative_to(DATA_DIR)}"
                 
-                cid = upsert_clothes(primary_rel_path, c_cls, summary_desc, video_id)
-                # Note: upsert_clothes was updated to handle gallery_urls internally but we can explicitly set it if needed.
-                # Since entity_store handles one render at a time, we call it multiple times for each angle.
+                # Use deterministic ID if single_product is requested (e.g. for Taobao)
+                clothes_id = f"item_{video_id}" if single_product else None
+                
+                # Enrich metadata with scraped attributes
+                if attributes:
+                    c_cls["attributes"] = attributes
+                    if "品牌" in attributes:
+                        c_cls["display_name"] = f"{attributes['品牌']} {c_cls.get('category','')}"
+                    if "货号" in attributes:
+                        summary_desc = f"【货号：{attributes['货号']}】\n" + summary_desc
+                
+                cid = upsert_clothes(primary_rel_path, c_cls, summary_desc, video_id, clothes_id=clothes_id)
+                
+                # Attach all other angles to the same entity
                 for g_path in gallery_rel_paths:
                     if g_path != primary_rel_path:
-                        upsert_clothes(g_path, c_cls, summary_desc, video_id)
+                        upsert_clothes(g_path, c_cls, summary_desc, video_id, clothes_id=cid)
                 
                 clothes_ids.append(cid)
                 print(f"[{video_id}] 👔 SAVED: {c_cls.get('display_name','')} (with {len(gallery_rel_paths)} angles)")
 
     print(f"[{video_id}] Summary: {len(clothes_ids)} clothes, {len(actor_ids)} actors, {len(scene_ids)} scenes")
     return {"actor_ids": actor_ids, "clothes_ids": clothes_ids,
-            "scene_ids": scene_ids, "thumbnail_url": thumbnail_url}
+            "scene_ids": scene_ids, "thumbnail_url": thumbnail_url,
+            "clothes_descs": [g[0]["description"] for g in groups] if 'groups' in locals() and groups else [],
+            "scene_descs": [analysis.get("scene_description", "scene") for analysis in [{"scene_description": "scene"}] * len(scene_ids)]}  # Simplified scene descs
 
 
 def _group_clothes_by_color_category(candidates: list[dict]) -> list[list[dict]]:
@@ -229,7 +264,7 @@ async def background_video_processing(request: IngestionRequest, video_id: str):
 
     transcript, script_analysis = "", {}
 
-    if media_type == "video":
+    if media_type in ["video", "video_and_images"]:
         video_path = result.get("video_path", workspace["video"])
         print(f"[{video_id}] Step 2: Extracting keyframes...")
         try:
@@ -237,7 +272,26 @@ async def background_video_processing(request: IngestionRequest, video_id: str):
         except Exception as e:
             print(f"[{video_id}] Frame extraction error: {e}")
             return
-        entity_links = _run_vla_on_frames(frames, workspace, video_id)
+            
+        # If we have additional images (e.g., from Taobao scraping)
+        if media_type == "video_and_images":
+            image_paths = result.get("image_paths", [])
+            print(f"[{video_id}] Found {len(image_paths)} additional gallery images. Appending to frames for analysis...")
+            # If there's a video, we might have multiple products, but for Taobao it's usually just one.
+            # However, analyzing 37 images is slow. Let's pick at most 5 for VLA classification.
+            sample_size = min(5, len(image_paths))
+            import random
+            # Pick first few as they are often primary product images
+            for i, img_path in enumerate(image_paths[:sample_size]):
+                import shutil
+                target = workspace["keyframes"] / f"gallery_{i:03d}{img_path.suffix}"
+                shutil.copy(img_path, target)
+                frames.append(target)
+                
+        # For Taobao/Tmall, we always want a single product entry
+        is_taobao = "taobao.com" in cleaned_url or "tmall.com" in cleaned_url or "tb.cn" in cleaned_url
+        attributes = result.get("attributes", {})
+        entity_links = _run_vla_on_frames(frames, workspace, video_id, single_product=is_taobao, attributes=attributes)
 
         print(f"[{video_id}] Step 3: Audio & transcript...")
         try:
@@ -252,23 +306,61 @@ async def background_video_processing(request: IngestionRequest, video_id: str):
 
     elif media_type == "images":
         image_paths = result.get("image_paths", [])
-        print(f"[{video_id}] Image gallery: {len(image_paths)} images. Mirroring to keyframes...")
-        # Copy to keyframes folder with 'time_XX.00s.jpg' format for timeline
+        print(f"[{video_id}] Image gallery: {len(image_paths)} images. Analyzing sample...")
+        # Copy all to keyframes for the timeline/gallery view
         import shutil
         mirrored_paths = []
+        analysis_paths = []
         for i, img_path in enumerate(image_paths):
-            target = workspace["keyframes"] / f"time_{i*2.0:07.2f}s{img_path.suffix}"
+            target = workspace["keyframes"] / f"gallery_img_{i:03d}{img_path.suffix}"
             shutil.copy(img_path, target)
             mirrored_paths.append(target)
+            # Only analyze first 5 to get the product details quickly
+            if i < 5:
+                analysis_paths.append(target)
             
-        entity_links = _run_vla_on_frames(mirrored_paths, workspace, video_id)
+        # For image-only Taobao links
+        is_taobao = "taobao.com" in cleaned_url or "tmall.com" in cleaned_url or "tb.cn" in cleaned_url
+        attributes = result.get("attributes", {})
+        entity_links = _run_vla_on_frames(analysis_paths, workspace, video_id, single_product=is_taobao, attributes=attributes)
+        
+        # Attach ALL images to the clothing entry's gallery if found
+        if entity_links["clothes_ids"]:
+            from services.entity_store import update_clothes as store_update
+            cid = entity_links["clothes_ids"][0]
+            # Convert all mirrored Paths to relative URLs
+            all_gallery_urls = [f"/data/{p.relative_to(DATA_DIR)}" for p in mirrored_paths]
+            store_update(cid, {"gallery_urls": all_gallery_urls})
     else:
         entity_links = {"actor_ids": [], "clothes_ids": [], "scene_ids": [], "thumbnail_url": ""}
+
+    thumbnail_path = result.get("thumbnail_path")
+    if thumbnail_path and thumbnail_path.exists():
+        # Override the thumbnail with the webpage screenshot if we got one from playwright
+        entity_links["thumbnail_url"] = f"/data/{thumbnail_path.relative_to(DATA_DIR)}"
+
+    # ── Generate Video Prompt ──
+    print(f"[{video_id}] Step 4: Generating Video Generation Prompt...")
+    try:
+        topic_name = script_analysis.get('topic', 'Product Video')
+        selling_pts = script_analysis.get('selling_points', [])
+        c_descs = entity_links.get("clothes_descs", [])
+        s_descs = entity_links.get("scene_descs", [])
+        
+        from services.script_analyzer import generate_video_prompt
+        vid_prompt = generate_video_prompt(topic_name, selling_pts, c_descs, s_descs)
+        script_analysis["video_generation_prompt"] = vid_prompt
+        
+        # update the analysis file
+        with open(workspace["base"] / "script_analysis.json", "w", encoding="utf-8") as f:
+            json.dump({"transcript": transcript, "analysis": script_analysis}, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        print(f"[{video_id}] Video prompt error: {e}")
 
     # ── Post entry linking all entities ──
     date_str = date.today().isoformat()
     base_url = f"/data/{date_str}/{video_id}"
-    video_url = f"{base_url}/video.mp4" if media_type == "video" else ""
+    video_url = f"{base_url}/video.mp4" if "video" in media_type else ""
     
     upsert_post(
         post_id=video_id,
@@ -373,6 +465,7 @@ async def get_video_details(video_id: str):
                 "display_name": clothes.get("display_name", ""),
                 "description": clothes.get("description", ""),
                 "gallery_urls": clothes.get("gallery_urls", []),
+                "attributes": clothes.get("attributes", {}), # Added this line
                 "created_at": clothes.get("created_at", "")
             })
             seen_clothes.add(cid)
@@ -406,11 +499,12 @@ async def get_video_details(video_id: str):
         "video_url": post.get("video_url"),
         "audio_url": post.get("audio_url"),
         "script_analysis": {
-            "summary": post.get("summary", ""),
-            "topic": post.get("topic", ""),
-            "selling_points": post.get("selling_points", []),
-            "tone": post.get("tone", ""),
-            "transcript": post.get("transcript", "")
+            "summary": post.get("analysis", {}).get("summary", ""),
+            "topic": post.get("analysis", {}).get("topic", ""),
+            "selling_points": post.get("analysis", {}).get("selling_points", []),
+            "tone": post.get("analysis", {}).get("tone", ""),
+            "transcript": post.get("transcript", ""),
+            "video_generation_prompt": post.get("analysis", {}).get("video_generation_prompt", "")
         },
         "assets": assets
     }

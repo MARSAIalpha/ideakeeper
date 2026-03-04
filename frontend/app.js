@@ -15,7 +15,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Views
     const dashboardView = document.getElementById('dashboard-view');
-    const statsView = document.getElementById('stats-view');
     const actorsView = document.getElementById('actors-view');
     const clothesView = document.getElementById('clothes-view');
     const scenesView = document.getElementById('scenes-view');
@@ -26,9 +25,6 @@ document.addEventListener('DOMContentLoaded', () => {
         scenes: document.getElementById('grid-scenes')
     };
 
-    const countClothes = document.getElementById('count-clothes');
-    const countScenes = document.getElementById('count-scenes');
-
     const recentActors = document.getElementById('recent-actors');
     const recentClothes = document.getElementById('recent-clothes');
 
@@ -36,6 +32,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnGenerate = document.getElementById('btn-generate');
     const generateModal = document.getElementById('generate-modal');
     const btnCancel = document.getElementById('btn-cancel');
+
+    // Import Modal
+    const btnImportLink = document.getElementById('btn-import-link');
+    const modalImportLink = document.getElementById('modal-import-link');
+    const btnDoImport = document.getElementById('btn-do-import');
+    const importUrlInput = document.getElementById('import-url-input');
+    const importStatus = document.getElementById('import-status');
 
     // --- Initialization moved to bottom ---
 
@@ -84,8 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updateStats() {
-        if (countClothes) countClothes.textContent = state.assets.clothes.length;
-        if (countScenes) countScenes.textContent = state.assets.scenes.length;
+        // Stats removed
     }
 
     function createCardHTML(asset) {
@@ -115,63 +117,81 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!posts || posts.length === 0) {
                 dashboardContainer.innerHTML = `
                     <div style="text-align:center; padding: 4rem 0;">
-                        <h3 style="color:white; margin-bottom:1rem">No videos found</h3>
-                        <p style="color:var(--text-secondary)">Generate your first asset pipeline to see results here.</p>
+                        <h3 style="color:white; margin-bottom:1rem">No assets found</h3>
+                        <p style="color:var(--text-secondary)">Import a link to see your resources here.</p>
                     </div>
                 `;
                 return;
             }
 
             dashboardContainer.innerHTML = `
-                <div class="dashboard-sections">
-                    <div class="section">
-                        <div class="section-header">
-                            <h3>Video Feed</h3>
-                            <span class="view-all" data-target="kb">View Relations</span>
-                        </div>
-                        <div class="video-window-grid">
-                            ${posts.reverse().map(p => {
-                const videoUrl = p.video_url || '';
+                <div class="dashboard-sections" style="padding-bottom: 4rem;">
+                    ${posts.reverse().map(p => {
+                let dateStr = 'Unknown Date';
+                if (p.updated_at) {
+                    try { dateStr = new Date(p.updated_at).toLocaleDateString(); } catch (e) { }
+                } else if (p.date) {
+                    dateStr = p.date;
+                }
+
+                // Collect child assets for this post
+                const children = [];
+                (p.actors_info || []).forEach(a => children.push({ ...a, type: 'actors', url: a.cutout_url, id: a.actor_id }));
+                (p.clothes_info || []).forEach(c => children.push({ ...c, type: 'clothes', url: c.render_url, id: c.clothes_id }));
+                (p.scenes_info || []).forEach(s => children.push({ ...s, type: 'scenes', url: s.scene_url, id: s.scene_id }));
+
                 return `
-                                <div class="video-window" id="window-${p.post_id}" onclick="window.toggleInPlacePlay('${p.post_id}')">
-                                    ${p.thumbnail_url ? `<img src="${p.thumbnail_url}" alt="thumbnail" onerror="this.src='https://via.placeholder.com/800x450?text=Generating+Preview...'">` : `<div style="height:150px; display:flex; align-items:center; justify-content:center; background:var(--bg-panel); color:var(--text-secondary)">No Thumbnail</div>`}
-                                    ${videoUrl ? `
-                                        <video class="preview-video" loop muted playsinline src="${videoUrl}"></video>
-                                        <div class="play-btn">
-                                            <i class="fas fa-play">▶</i>
-                                        </div>
-                                    ` : ''}
-                                    <div class="info-btn" onclick="event.stopPropagation(); openVideoDetailModal('${p.post_id}')">
-                                        <i class="fas fa-info-circle">i</i>
-                                    </div>
-                                    <div class="window-info">
-                                        <h4>${(() => {
-                        if (p.updated_at) {
-                            try { return new Date(p.updated_at).toLocaleString(); }
-                            catch (e) { }
-                        }
-                        return p.date || 'New Import';
-                    })()}</h4>
+                        <div class="post-unit" style="background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 16px; margin-bottom: 2rem; overflow: hidden;">
+                            <div class="post-header" style="padding: 1rem 1.5rem; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.02);">
+                                <div>
+                                    <h3 style="margin: 0; color: white; display:flex; align-items:center; gap:0.5rem;">
+                                        <i class="fas fa-link" style="color:var(--accent); font-size:0.9rem;"></i> 
+                                        <a href="${p.source_url || '#'}" target="_blank" style="color: white; text-decoration: none;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">${p.topic || 'Imported Link'}</a>
+                                    </h3>
+                                    <span style="font-size: 0.8rem; color: var(--text-secondary);">${dateStr}</span>
+                                </div>
+                                <button class="btn-secondary" onclick="openVideoDetailModal('${p.post_id}')" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">View Intelligence</button>
+                            </div>
+                            <div class="post-body" style="display: flex; flex-wrap: wrap; padding: 1.5rem; gap: 1.5rem;">
+                                
+                                <!-- Main Video/Thumbnail -->
+                                <div class="post-main-media" style="flex: 0 0 300px; max-width: 100%;">
+                                    <div class="video-window" id="window-${p.post_id}" onclick="window.toggleInPlacePlay('${p.post_id}')" style="margin-bottom: 0; width: 100%;">
+                                        ${p.thumbnail_url ? `<img src="${p.thumbnail_url}" alt="thumbnail" onerror="this.src='https://via.placeholder.com/800x450?text=Preview'">` : `<div style="height:168px; display:flex; align-items:center; justify-content:center; background:var(--bg-main); color:var(--text-secondary)">No Thumbnail</div>`}
+                                        ${p.video_url ? `
+                                            <video class="preview-video" loop muted playsinline src="${p.video_url}"></video>
+                                            <div class="play-btn"><i class="fas fa-play">▶</i></div>
+                                        ` : ''}
+                                        <div class="info-btn" onclick="event.stopPropagation(); openVideoDetailModal('${p.post_id}')"><i class="fas fa-info-circle">i</i></div>
+                                        <div class="window-info" style="padding: 1.5rem 1rem 0.5rem;"><h4 style="font-size:0.8rem;">Source Media</h4></div>
                                     </div>
                                 </div>
-                            `}).join('')}
+
+                                <!-- Extracted Assets Gallery -->
+                                <div class="post-assets" style="flex: 1; min-width: 300px;">
+                                    <h4 style="margin-bottom: 1rem; color: var(--text-secondary); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;">Extracted Assets (${children.length})</h4>
+                                    ${children.length > 0 ? `
+                                        <div class="gallery-grid" style="grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 0.8rem;">
+                                            ${children.map(child => `
+                                                <div class="asset-card" onclick="openEntityDetail('${child.type}', '${child.id}')" style="border-radius: 8px;">
+                                                    <div class="asset-img-container" style="padding: 6px;">
+                                                        <img src="${child.url}" alt="${child.display_name || 'Asset'}" loading="lazy" onerror="this.src='https://via.placeholder.com/400x600?text=Asset'">
+                                                    </div>
+                                                    <div class="asset-info" style="padding: 0.5rem;">
+                                                        <p style="font-size: 0.75rem;">${child.display_name || humanize(child.id)}</p>
+                                                        <p class="date" style="font-size: 0.65rem; text-transform: capitalize;">${child.type.slice(0, -1)}</p>
+                                                    </div>
+                                                </div>
+                                            `).join('')}
+                                        </div>
+                                    ` : '<p style="color:var(--text-secondary); font-size: 0.9rem;">No entities extracted for this link yet.</p>'}
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                    
-                    <div class="section">
-                        <div class="section-header">
-                            <h3>Trending Assets</h3>
-                            <span class="view-all" data-target="clothes">All Clothes</span>
-                        </div>
-                        <div class="gallery-grid">
-                            ${state.assets.clothes.slice(-4).reverse().map(createCardHTML).join('')}
-                        </div>
-                    </div>
+                        `;
+            }).join('')}
                 </div>
             `;
-
-            // Re-fetch statistics for dashboard cards
-            updateStats();
 
         } catch (err) {
             console.error("Dashboard render failed:", err);
@@ -271,14 +291,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Hide all views
         [dashboardView, actorsView, clothesView, scenesView, kbView].forEach(v => v && v.classList.add('hidden'));
-        statsView.classList.add('hidden');
 
         const searchContainer = document.getElementById('search-container');
         searchContainer.classList.add('hidden');
 
         if (tabId === 'dashboard') {
             dashboardView.classList.remove('hidden');
-            statsView.classList.remove('hidden');
         } else if (tabId === 'kb') {
             kbView.classList.remove('hidden');
             fetchKB('posts');
@@ -291,7 +309,6 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             const viewMap = { actors: actorsView, scenes: scenesView };
             viewMap[tabId]?.classList.remove('hidden');
-            statsView.classList.remove('hidden');
             searchContainer.classList.remove('hidden');
             const searchInput = document.getElementById('semantic-search-input');
             if (searchInput) { searchInput.placeholder = `Search within ${titles[tabId]}...`; searchInput.value = ''; }
@@ -442,8 +459,33 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <label style="display:block; font-size:0.85rem; color:var(--text-secondary); margin-bottom:4px;">Style Class</label>
                                 <input type="text" id="edit-clothes-style" value="${entity.style_class || ''}" style="width:100%; padding:10px; border-radius:6px; border:1px solid var(--border-color); background:var(--bg-main); color:white;">
                             </div>
+                            
+                            ${entity.attributes && Object.keys(entity.attributes).length > 0 ? `
+                            <div style="margin-top: 0.5rem; background: rgba(255,255,255,0.03); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color);">
+                                <h4 style="margin-bottom: 0.8rem; color: var(--accent); font-size: 0.9rem;">Product Parameters</h4>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; font-size: 0.85rem;">
+                                    ${Object.entries(entity.attributes).map(([k, v]) => `
+                                        <div style="color: var(--text-secondary);">${k}:</div>
+                                        <div style="color: white; font-weight: 500;">${v}</div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                            ` : ''}
                         </div>
                     </div>
+
+                    ${entity.gallery_urls?.length > 1 ? `
+                    <h4 style="margin-bottom:1rem; color:white;">Product Gallery (${entity.gallery_urls.length} images)</h4>
+                    <div class="gallery-grid" style="grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 0.5rem; margin-bottom: 2rem;">
+                        ${entity.gallery_urls.map(url => `
+                            <div class="asset-card" style="border-radius: 6px; cursor:zoom-in;">
+                                <div class="asset-img-container" style="padding: 4px;">
+                                    <img src="${url}" style="border-radius: 4px;" loading="lazy">
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    ` : ''}
                     
                     <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--border-color); padding-top:1.5rem; margin-bottom:1.5rem;">
                         <button id="btn-delete-clothes" style="padding:10px 16px; background:#ff475722; color:#ff4757; border:1px solid #ff475755; border-radius:6px; cursor:pointer;" onclick="deleteClothesEntity('${id}')">
@@ -608,6 +650,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td>${c.category}</td>
                     <td><span class="entity-chip clothes">${c.style_class}</span></td>
                     <td>${c.color}</td>
+                    <td style="color:var(--accent); font-weight:600; cursor:pointer" onclick="event.stopPropagation(); openEntityDetail('clothes', '${c.clothes_id}')">
+                        <i class="fas fa-images"></i> ${c.gallery_urls?.length || 1} 张
+                    </td>
                     <td>${c.appeared_in?.length || 0}</td>
                 </tr>
             `).join('');
@@ -717,6 +762,69 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('modal-api-docs').classList.remove('hidden');
         });
         document.querySelector('.header-actions').appendChild(btnApiDocs);
+
+        // Import Link Modal Bindings
+        if (btnImportLink) {
+            btnImportLink.addEventListener('click', () => {
+                modalImportLink.classList.remove('hidden');
+                importUrlInput.value = '';
+                importStatus.style.display = 'none';
+                btnDoImport.disabled = false;
+                btnDoImport.textContent = 'Start Extraction';
+            });
+        }
+
+        if (btnDoImport) {
+            btnDoImport.addEventListener('click', handleImport);
+        }
+    }
+
+    async function handleImport() {
+        const url = importUrlInput.value.trim();
+        if (!url) {
+            showImportStatus('Please enter a valid URL', 'error');
+            return;
+        }
+
+        btnDoImport.disabled = true;
+        btnDoImport.textContent = 'Processing...';
+        showImportStatus('Starting pipeline...', 'info');
+
+        try {
+            const response = await fetch('/webhook/openclaw', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                showImportStatus(`Success! Video ID: ${data.video_id}. Processing started in background.`, 'success');
+                setTimeout(() => {
+                    modalImportLink.classList.add('hidden');
+                    render(); // Refresh dashboard to show "Processing" if applicable
+                }, 3000);
+            } else {
+                showImportStatus(`Error: ${data.detail || 'Failed to start pipeline'}`, 'error');
+                btnDoImport.disabled = false;
+                btnDoImport.textContent = 'Start Extraction';
+            }
+        } catch (error) {
+            showImportStatus(`Network error: ${error.message}`, 'error');
+            btnDoImport.disabled = false;
+            btnDoImport.textContent = 'Start Extraction';
+        }
+    }
+
+    function showImportStatus(message, type) {
+        importStatus.textContent = message;
+        importStatus.style.display = 'block';
+        importStatus.style.background = type === 'error' ? 'rgba(255, 71, 87, 0.1)' :
+            (type === 'success' ? 'rgba(46, 213, 115, 0.1)' : 'rgba(52, 152, 219, 0.1)');
+        importStatus.style.color = type === 'error' ? '#ff4757' :
+            (type === 'success' ? '#2ed573' : '#3498db');
+        importStatus.style.border = `1px solid ${type === 'error' ? '#ff475755' : (type === 'success' ? '#2ed57355' : '#3498db55')}`;
     }
 
     // --- Video Detail Modal ---
@@ -764,6 +872,15 @@ document.addEventListener('DOMContentLoaded', () => {
                         </video>
                     </div>` : ''}
                     <div class="script-container">
+                        ${data.script_analysis?.video_generation_prompt ? `
+                        <div style="margin-bottom: 1.5rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                                <h4>AI Video Prompt</h4>
+                                <button class="btn-secondary" style="font-size: 0.75rem; padding: 4px 8px;" onclick="navigator.clipboard.writeText(this.parentElement.nextElementSibling.innerText); this.textContent='Copied!'; setTimeout(()=>this.textContent='Copy', 2000);">Copy</button>
+                            </div>
+                            <div class="script-box" style="background: var(--bg-primary); border-left: 3px solid var(--accent); font-family: monospace; font-size: 0.85rem;">${data.script_analysis.video_generation_prompt}</div>
+                        </div>
+                        ` : ''}
                         <h4>Oral Script / 文案</h4>
                         <div class="script-box">${transcript}</div>
                     </div>

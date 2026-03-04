@@ -19,5 +19,123 @@
     "tone": "Unknown",
     "summary": "No speech detected in the video.",
     "updated_at": "2026-02-26T20:37:45.453769"
+  },
+  "ebbd994cf439": {
+    "post_id": "ebbd994cf439",
+    "source_url": "http://xhslink.com/o/1VWt8ndPZNc",
+    "date": "2026-02-27",
+    "thumbnail_url": "/data/2026-02-27\\ebbd994cf439\\keyframes\\time_0000.00s.jpg",
+    "actor_ids": [],
+    "clothes_ids": [
+      "7d67e9f2f4"
+    ],
+    "scene_ids": [
+      "6c37df8192",
+      "33e381b6c6"
+    ],
+    "video_url": "/data/2026-02-27/ebbd994cf439/video.mp4",
+    "transcript": "",
+    "topic": "Unknown",
+    "selling_points": [],
+    "tone": "Unknown",
+    "summary": "No speech detected in the video.",
+    "updated_at": "2026-02-27T12:23:15.392546"
+  },
+  "e26e81dd8c7b": {
+    "post_id": "e26e81dd8c7b",
+    "source_url": "https://v.douyin.com/ZD6y_4x4TH4/",
+    "date": "2026-02-27",
+    "thumbnail_url": "/data/2026-02-27\\e26e81dd8c7b\\keyframes\\time_0000.00s.png",
+    "actor_ids": [],
+    "clothes_ids": [
+      "1026cbd71d"
+    ],
+    "scene_ids": [
+      "616df60857",
+      "1501011b2e"
+    ],
+    "video_url": "",
+    "transcript": "",
+    "topic": "",
+    "selling_points": [],
+    "tone": "",
+    "summary": "",
+    "updated_at": "2026-02-27T12:54:29.164824"
+  },
+  "3205159c06aa": {
+    "post_id": "3205159c06aa",
+    "source_url": "https://e.tb.cn/h.i01IsxWrH9XsVLc?tk=on1EUJLhonu",
+    "date": "2026-02-27",
+    "thumbnail_url": "/data/2026-02-27\\3205159c06aa\\images\\carousel_0.jpg",
+    "actor_ids": [],
+    "clothes_ids": [
+      "5c5fb3c120"
+    ],
+    "scene_ids": [],
+    "video_url": "",
+    "transcript": "",
+    "topic": "赵三观 咖色/米色 性感蕾丝吊带连衣裙女春夏新款2026法式复古",
+    "selling_points": [
+      "已售 1000+",
+      "回头客121人",
+      "超9千人加购",
+      "预售，30天内发货",
+      "快递: 10.00",
+      "88VIP退货包运费, 7天无理由退货, 极速退款"
+    ],
+    "tone": "",
+    "summary": "淘宝商品导入提取",
+    "updated_at": "2026-02-27T19:23:29.435055"
+  },
+  "a52a2e21318f": {
+    "post_id": "a52a2e21318f",
+    "source_url": "https://e.tb.cn/h.i01HHDG8wsuYADy?tk=ErcQUJL7rKT",
+    "date": "2026-03-02",
+    "thumbnail_url": "/data/2026-03-02\\a52a2e21318f\\thumbnail.jpg",
+    "actor_ids": [],
+    "clothes_ids": [
+      "75e8eceaa6"
+    ],
+    "scene_ids": [
+      "411ada01a3",
+      "41fa27ffaa"
+    ],
+    "video_url": "/data/2026-03-02/a52a2e21318f/video.mp4",
+    "transcript": "",
+    "topic": "Unknown",
+    "selling_points": [],
+    "tone": "Unknown",
+    "summary": "No speech detected in the video.",
+    "updated_at": "2026-03-02T15:12:57.009228"
+  },
+  "f88c3ebc6388": {
+    "post_id": "f88c3ebc6388",
+    "source_url": "https://e.tb.cn/h.i18bXhzbrXFj6ve?tk=k6JgUsCHtrv",
+    "date": "2026-03-03",
+    "thumbnail_url": "/data/2026-03-03\\f88c3ebc6388\\images\\carousel_0.jpg",
+    "actor_ids": [],
+    "clothes_ids": [
+      "clothes_f88c3ebc6388"
+    ],
+    "scene_ids": [],
+    "video_url": "/data/2026-03-03\\f88c3ebc6388\\video.mp4",
+    "transcript": "",
+    "topic": "PANNPANN春夏新款V领蕾丝拼接超长连衣裙柔绿色Zinnia【现货】",
+    "selling_points": [
+      "已售 100+",
+      "多人评价\"贵气感满满\"",
+      "超700人加购",
+      "官方立减12%省382元",
+      "48小时内发货",
+      "快递: 免运费",
+      "大促价保",
+      "88VIP退货包运费",
+      "假一赔四",
+      "极速退款",
+      "7天无理由退换"
+    ],
+    "tone": "",
+    "summary": "淘宝商品导入提取",
+    "updated_at": "2026-03-03T18:12:38.219131"
   }
 }

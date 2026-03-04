@@ -1,1 +1,452 @@
-{}
+{
+  "actors": [
+    {
+      "id": "actor_001_zhaolusi_type",
+      "name": "露思儿",
+      "name_en": "Zhao Type",
+      "reference_star": "赵露思",
+      "platform": "xiaohongshu",
+      "fan_count": "2000万+",
+      "style": "甜美治愈系",
+      "style_tags": [
+        "甜美",
+        "治愈",
+        "少女",
+        "元气"
+      ],
+      "appearance": {
+        "face_shape": "圆润鹅蛋脸，饱满苹果肌",
+        "eyes": "大而圆的杏眼，卧蚕明显，眼神清澈无辜",
+        "nose": "小巧挺直，鼻头微圆",
+        "lips": "M型唇，上唇微翘，笑容甜美有感染力",
+        "skin": "白皙细腻，水光肌质感",
+        "hair": "深棕色长卷发，蓬松空气刘海，发量丰厚",
+        "body": "petite身材，160cm左右，比例匀称"
+      },
+      "personality": [
+        "甜美",
+        "亲和",
+        "元气",
+        "无攻击性"
+      ],
+      "ai_prompt": "A sweet Asian girl resembling Zhao Lusi, round oval face with full apple cheeks, big round almond eyes with obvious aegyo sal, small straight nose with round tip, M-shaped lips with sweet infectious smile, fair dewy skin, long wavy dark brown hair with airy bangs, voluminous hair, petite figure around 160cm, healing and innocent vibe, 20 years old, fresh and natural makeup, bright and cheerful, 8k, photorealistic",
+      "prompt_chinese": "甜美亚洲女孩，类似赵露思，圆润鹅蛋脸饱满苹果肌，大而圆的杏眼明显卧蚕，小巧挺直鼻头微圆，M型唇上唇微翘，甜美有感染力的笑容，白皙水光肌，深棕色长卷发蓬松空气刘海，发量丰厚，petite身材160cm左右，治愈无辜气质，20岁，清新自然妆容，明亮元气，8K超清",
+      "signature_poses": [
+        "歪头杀",
+        "双手比心",
+        "甜笑wink",
+        "嘟嘴卖萌"
+      ],
+      "best_for": [
+        "甜美风连衣裙",
+        "少女系穿搭",
+        "治愈系妆容"
+      ],
+      "video_style": "治愈系、甜美日常、元气满满",
+      "created_at": "2026-03-03",
+      "source": "ideakeeper_virtual_models",
+      "image_url": "../data/entities/actor_images/actor_001_zhaolusi_type.png",
+      "image_local_path": "D:\\ai_code4090\\ideakeeper\\ideakeeper\\data\\entities\\actor_images\\actor_001_zhaolusi_type.png",
+      "avatar_url": "../data/entities/actor_images/actor_001_zhaolusi_type.png"
+    },
+    {
+      "id": "actor_002_yimengling_type",
+      "name": "梦玲儿",
+      "name_en": "Meng Type",
+      "reference_star": "易梦玲",
+      "platform": "douyin",
+      "fan_count": "千万级",
+      "style": "纯欲氛围感",
+      "style_tags": [
+        "纯欲",
+        "氛围感",
+        "撩人",
+        "无辜"
+      ],
+      "appearance": {
+        "face_shape": "幼态短圆脸，下巴微尖",
+        "eyes": "大而无辜的狗狗眼，眼尾微垂，眼神迷离",
+        "nose": "小巧精致，鼻梁不高但秀气",
+        "lips": "饱满嘟嘟唇，微张时纯欲感",
+        "skin": "暖调白皙，健康光泽",
+        "hair": "黑长直或自然微卷，蓬松高颅顶，发量惊人",
+        "body": "纤细柔软，165cm，腰臀比极佳，曲线优美"
+      },
+      "personality": [
+        "纯欲",
+        "无辜",
+        "撩人",
+        "氛围感"
+      ],
+      "ai_prompt": "A pure-desire Asian goddess resembling Yi Mengling, youthful baby face with short round shape and slightly pointed chin, big innocent puppy eyes with slight downward tail, misty charming gaze, small delicate nose, full pouty lips slightly open for pure-yet-seductive look, warm fair skin with healthy glow, long straight black hair or natural waves with fluffy high cranial top, amazing hair volume, slim and soft figure 165cm with excellent waist-hip ratio, beautiful curves, alluring yet innocent atmosphere, 22 years old, pure desire vibe, 8k, photorealistic",
+      "prompt_chinese": "纯欲亚洲女神，类似易梦玲，幼态短圆脸下巴微尖，大而无辜的狗狗眼眼尾微垂，眼神迷离魅惑，小巧精致鼻梁，饱满嘟嘟唇微张纯欲感，暖调白皙健康光泽肌，黑长直或自然微卷蓬松高颅顶，发量惊人，纤细柔软身材165cm，腰臀比极佳曲线优美，纯欲无辜氛围感，22岁，纯欲风，8K超清",
+      "signature_poses": [
+        "无辜眼神",
+        "撩发",
+        "咬唇",
+        "慵懒姿态"
+      ],
+      "best_for": [
+        "吊带裙",
+        "露背装",
+        "氛围感穿搭"
+      ],
+      "video_style": "氛围感、纯欲撩人、慢动作唯美",
+      "created_at": "2026-03-03",
+      "source": "ideakeeper_virtual_models",
+      "image_url": "../data/entities/actor_images/actor_002_yimengling_type.png",
+      "image_local_path": "D:\\ai_code4090\\ideakeeper\\ideakeeper\\data\\entities\\actor_images\\actor_002_yimengling_type.png",
+      "avatar_url": "../data/entities/actor_images/actor_002_yimengling_type.png"
+    },
+    {
+      "id": "actor_003_yangcaiyu_type",
+      "name": "采钰儿",
+      "name_en": "Cai Type",
+      "reference_star": "杨采钰",
+      "platform": "xiaohongshu",
+      "fan_count": "300万+",
+      "style": "法式复古优雅",
+      "style_tags": [
+        "法式",
+        "优雅",
+        "复古",
+        "高级"
+      ],
+      "appearance": {
+        "face_shape": "标准鹅蛋脸，轮廓柔和",
+        "eyes": "细长大眼，眼尾微挑，眼神温柔知性",
+        "nose": "挺直秀气，侧面线条优美",
+        "lips": "饱满红唇，法式优雅",
+        "skin": "健康小麦色，光泽感",
+        "hair": "深棕色，法式低盘发或慵懒波浪",
+        "body": "匀称纤细，168cm，优雅体态"
+      },
+      "personality": [
+        "优雅",
+        "知性",
+        "复古",
+        "高级感"
+      ],
+      "ai_prompt": "An elegant French-style Asian woman resembling Yang Caiyu, standard oval face with soft contours, slender big eyes with slightly upturned tail, gentle and intellectual gaze, straight delicate nose with beautiful side profile, full red lips with French elegance, healthy wheat-colored skin with glow, dark brown hair in French low bun or lazy waves, balanced slender figure 168cm, elegant posture, sophisticated and intellectual, vintage French chic, 25 years old, advanced sense, 8k, photorealistic",
+      "prompt_chinese": "优雅法式亚洲女性，类似杨采钰，标准鹅蛋脸轮廓柔和，细长大眼眼尾微挑，眼神温柔知性，挺直秀气鼻梁侧面线条优美，饱满红唇法式优雅，健康小麦色光泽肌，深棕色法式低盘发或慵懒波浪，匀称纤细身材168cm，优雅体态，知性复古高级感，25岁，法式风情，8K超清",
+      "signature_poses": [
+        "优雅颔首",
+        "侧脸轮廓",
+        "从容微笑",
+        "慵懒法式姿态"
+      ],
+      "best_for": [
+        "法式连衣裙",
+        "复古穿搭",
+        "高级感妆容"
+      ],
+      "video_style": "法式优雅、复古电影感、高级感",
+      "created_at": "2026-03-03",
+      "source": "ideakeeper_virtual_models",
+      "image_url": "../data/entities/actor_images/actor_003_yangcaiyu_type.png",
+      "image_local_path": "D:\\ai_code4090\\ideakeeper\\ideakeeper\\data\\entities\\actor_images\\actor_003_yangcaiyu_type.png",
+      "avatar_url": "../data/entities/actor_images/actor_003_yangcaiyu_type.png"
+    },
+    {
+      "id": "actor_004_liuyuxin_type",
+      "name": "雨昕儿",
+      "name_en": "Yu Type",
+      "reference_star": "刘雨昕",
+      "platform": "douyin",
+      "fan_count": "百万级",
+      "style": "中性酷飒",
+      "style_tags": [
+        "酷感",
+        "中性",
+        "个性",
+        "时尚"
+      ],
+      "appearance": {
+        "face_shape": "高级脸，轮廓分明",
+        "eyes": "单眼皮/内双，狭长眼型，眼神锐利",
+        "nose": "挺直高鼻梁",
+        "lips": "薄唇，线条分明",
+        "skin": "冷白皮，清透",
+        "hair": "利落短发或高马尾，个性发色挑染",
+        "body": "纤细骨感，170cm，时尚比例"
+      },
+      "personality": [
+        "酷感",
+        "个性",
+        "自信",
+        "中性"
+      ],
+      "ai_prompt": "A cool fashion Asian girl resembling Liu Yuxin, high-fashion face with distinct contours, single eyelids or inner double eyelids with narrow eye shape, sharp gaze, straight high nose bridge, thin lips with defined lines, cool fair skin clear and transparent, neat short hair or high ponytail with personality color highlights, slim and bony figure 170cm, fashion proportions, confident and cool, gender-neutral chic, 22 years old, strong aura, 8k, photorealistic",
+      "prompt_chinese": "酷感时尚亚洲女孩，类似刘雨昕，高级脸轮廓分明，单眼皮内双狭长眼型眼神锐利，挺直高鼻梁，薄唇线条分明，冷白皮清透，利落短发或高马尾个性发色挑染，纤细骨感身材170cm时尚比例，自信酷感中性美，22岁，强大气场，8K超清",
+      "signature_poses": [
+        "单手插腰",
+        "冷峻眼神",
+        "随性姿态",
+        "酷飒站姿"
+      ],
+      "best_for": [
+        "中性风",
+        "街头潮酷",
+        "个性穿搭"
+      ],
+      "video_style": "酷飒、中性风、街头时尚",
+      "created_at": "2026-03-03",
+      "source": "ideakeeper_virtual_models",
+      "image_url": "../data/entities/actor_images/actor_004_liuyuxin_type.png",
+      "image_local_path": "D:\\ai_code4090\\ideakeeper\\ideakeeper\\data\\entities\\actor_images\\actor_004_liuyuxin_type.png",
+      "avatar_url": "../data/entities/actor_images/actor_004_liuyuxin_type.png"
+    },
+    {
+      "id": "actor_005_gaoyuanyuan_type",
+      "name": "圆圆儿",
+      "name_en": "Yuan Type",
+      "reference_star": "高圆圆",
+      "platform": "weibo",
+      "fan_count": "千万级",
+      "style": "温婉知性",
+      "style_tags": [
+        "温婉",
+        "知性",
+        "亲和",
+        "大气"
+      ],
+      "appearance": {
+        "face_shape": "标准鹅蛋脸，五官大气",
+        "eyes": "温柔大眼，眼神清澈",
+        "nose": "挺直适中",
+        "lips": "微笑唇，亲和力",
+        "skin": "白皙健康",
+        "hair": "黑色或深棕，低马尾或lob头",
+        "body": "匀称曲线，166cm，优雅体态"
+      },
+      "personality": [
+        "温婉",
+        "知性",
+        "亲和",
+        "大气"
+      ],
+      "ai_prompt": "A gentle intellectual Asian goddess resembling Gao Yuanyuan, standard oval face with generous features, gentle big eyes with clear gaze, straight moderate nose, smiling lips with affinity, fair healthy skin, black or dark brown hair in low ponytail or lob cut, balanced curvy figure 166cm, elegant posture, warm and graceful, professional yet feminine, intellectual charm, 30 years old, elegant temperament, 8k, photorealistic",
+      "prompt_chinese": "温婉知性亚洲女神，类似高圆圆，标准鹅蛋脸五官大气，温柔大眼眼神清澈，挺直适中鼻梁，微笑唇亲和力强，白皙健康肌肤，黑色或深棕低马尾lob头，匀称曲线身材166cm优雅体态，温暖graceful知性魅力，30岁，温婉大气气质，8K超清",
+      "signature_poses": [
+        "温柔微笑",
+        "优雅手势",
+        "从容气度",
+        "亲和姿态"
+      ],
+      "best_for": [
+        "职场风",
+        "知性优雅",
+        "成熟女性穿搭"
+      ],
+      "video_style": "知性优雅、温婉大气、职场精英",
+      "created_at": "2026-03-03",
+      "source": "ideakeeper_virtual_models",
+      "image_url": "../data/entities/actor_images/actor_005_gaoyuanyuan_type.png",
+      "image_local_path": "D:\\ai_code4090\\ideakeeper\\ideakeeper\\data\\entities\\actor_images\\actor_005_gaoyuanyuan_type.png",
+      "avatar_url": "../data/entities/actor_images/actor_005_gaoyuanyuan_type.png"
+    },
+    {
+      "id": "actor_006_qiushuzhen_type",
+      "name": "淑珍儿",
+      "name_en": "Zhen Type",
+      "reference_star": "邱淑贞/王祖贤",
+      "platform": "douyin",
+      "fan_count": "百万级",
+      "style": "港风复古女神",
+      "style_tags": [
+        "复古",
+        "港风",
+        "风情",
+        "电影感"
+      ],
+      "appearance": {
+        "face_shape": "瓜子脸，轮廓立体",
+        "eyes": "大而有神，电力十足",
+        "nose": "挺直精致",
+        "lips": "饱满红唇，风情万种",
+        "skin": "健康光泽，小麦色",
+        "hair": "复古大波浪卷发，乌黑浓密",
+        "body": "曲线明显，女人味十足，165cm"
+      },
+      "personality": [
+        "复古",
+        "风情",
+        "电影感",
+        "故事感"
+      ],
+      "ai_prompt": "A vintage Hong Kong style Asian beauty resembling Qiu Shuzhen or Joey Wong, melon seed face with three-dimensional contours, big and spirited eyes full of electricity, straight delicate nose, full red lips with myriad charms, healthy glowing wheat-colored skin, retro big wavy curly hair jet black and thick, obvious curves full of femininity 165cm, cinematic and story-telling vibe, 26 years old, retro goddess, 8k, photorealistic",
+      "prompt_chinese": "复古港风亚洲美人，类似邱淑贞王祖贤，瓜子脸轮廓立体，大而有神电力十足眼睛，挺直精致鼻梁，饱满红唇风情万种，健康光泽小麦色肌肤，复古大波浪卷发乌黑浓密，曲线明显女人味十足165cm，电影感故事感气质，26岁，复古女神，8K超清",
+      "signature_poses": [
+        "复古回眸",
+        "慵懒神态",
+        "风情万种",
+        "电影感pose"
+      ],
+      "best_for": [
+        "复古风",
+        "港风穿搭",
+        "红色系服装"
+      ],
+      "video_style": "港风复古、电影感、怀旧风情",
+      "created_at": "2026-03-03",
+      "source": "ideakeeper_virtual_models",
+      "image_url": "../data/entities/actor_images/actor_006_qiushuzhen_type.png",
+      "image_local_path": "D:\\ai_code4090\\ideakeeper\\ideakeeper\\data\\entities\\actor_images\\actor_006_qiushuzhen_type.png",
+      "avatar_url": "../data/entities/actor_images/actor_006_qiushuzhen_type.png"
+    },
+    {
+      "id": "actor_007_liuwen_type",
+      "name": "雯雯儿",
+      "name_en": "Wen Type",
+      "reference_star": "刘雯",
+      "platform": "xiaohongshu",
+      "fan_count": "百万级",
+      "style": "冷艳高级超模",
+      "style_tags": [
+        "冷艳",
+        "高级",
+        "气场",
+        "超模"
+      ],
+      "appearance": {
+        "face_shape": "超模脸，颧骨高，轮廓分明",
+        "eyes": "单眼皮，狭长眼型，眼神冷峻",
+        "nose": "高挺直鼻梁",
+        "lips": "薄唇，线条硬朗",
+        "skin": "小麦色，健康光泽",
+        "hair": "利落短发或高马尾，黑色",
+        "body": "高挑骨感，175cm+，超模比例"
+      },
+      "personality": [
+        "冷艳",
+        "高级",
+        "气场强大",
+        "疏离感"
+      ],
+      "ai_prompt": "A cold and elegant Asian supermodel resembling Liu Wen, supermodel face with high cheekbones and distinct contours, single eyelids with narrow eye shape, cool and sharp gaze, high straight nose bridge, thin lips with hard lines, wheat-colored healthy glowing skin, neat short hair or high ponytail jet black, tall and bony figure 175cm+, supermodel proportions, powerful aura and presence, 27 years old, high fashion, 8k, photorealistic",
+      "prompt_chinese": "冷艳高级亚洲超模，类似刘雯，超模脸颧骨高轮廓分明，单眼皮狭长眼型眼神冷峻，高挺直鼻梁，薄唇线条硬朗，小麦色健康光泽肌，利落短发或高马尾黑色，高挑骨感身材175cm+超模比例，强大气场疏离感，27岁，高级时尚，8K超清",
+      "signature_poses": [
+        "冷峻眼神",
+        "强大气场",
+        "不屑一顾",
+        "超模站姿"
+      ],
+      "best_for": [
+        "高级感",
+        "冷艳风",
+        "气场穿搭"
+      ],
+      "video_style": "高级感、冷艳、时尚大片",
+      "created_at": "2026-03-03",
+      "source": "ideakeeper_virtual_models",
+      "image_url": "../data/entities/actor_images/actor_007_liuwen_type.png",
+      "image_local_path": "D:\\ai_code4090\\ideakeeper\\ideakeeper\\data\\entities\\actor_images\\actor_007_liuwen_type.png",
+      "avatar_url": "../data/entities/actor_images/actor_007_liuwen_type.png"
+    },
+    {
+      "id": "actor_008_songhuiqiao_type",
+      "name": "慧乔儿",
+      "name_en": "Qiao Type",
+      "reference_star": "宋慧乔/孙艺珍",
+      "platform": "weibo",
+      "fan_count": "千万级",
+      "style": "温柔治愈姐姐",
+      "style_tags": [
+        "温柔",
+        "治愈",
+        "姐姐",
+        "女人味"
+      ],
+      "appearance": {
+        "face_shape": "鹅蛋脸，柔和轮廓",
+        "eyes": "温柔大眼，眼尾微垂，亲和",
+        "nose": "小巧挺直",
+        "lips": "微笑唇，温柔",
+        "skin": "水光肌，细腻",
+        "hair": "长直发或微卷，棕色",
+        "body": "匀称曲线，女人味，163cm"
+      },
+      "personality": [
+        "温柔",
+        "治愈",
+        "亲和",
+        "女人味"
+      ],
+      "ai_prompt": "A gentle healing Asian sister resembling Song Hye-kyo or Son Ye-jin, oval face with soft contours, gentle big eyes with slightly drooping tail affinity, small straight nose, smiling lips gentle, dewy skin delicate and fine, long straight hair or slightly wavy brown, balanced curvy figure full of femininity 163cm, warm kind approachable, caring vibe, 29 years old, gentle sister charm, 8k, photorealistic",
+      "prompt_chinese": "温柔治愈亚洲姐姐，类似宋慧乔孙艺珍，鹅蛋脸柔和轮廓，温柔大眼眼尾微垂亲和，小巧挺直鼻梁，微笑唇温柔，水光肌细腻，长直发或微卷棕色，匀称曲线女人味163cm，温暖亲切治愈感，29岁，温柔姐姐魅力，8K超清",
+      "signature_poses": [
+        "温柔微笑",
+        "治愈眼神",
+        "亲和姿态",
+        "温暖气质"
+      ],
+      "best_for": [
+        "温柔风",
+        "治愈系",
+        "轻熟女穿搭"
+      ],
+      "video_style": "温柔治愈、姐姐风、生活感",
+      "created_at": "2026-03-03",
+      "source": "ideakeeper_virtual_models",
+      "image_url": "../data/entities/actor_images/actor_008_songhuiqiao_type.png",
+      "image_local_path": "D:\\ai_code4090\\ideakeeper\\ideakeeper\\data\\entities\\actor_images\\actor_008_songhuiqiao_type.png",
+      "avatar_url": "../data/entities/actor_images/actor_008_songhuiqiao_type.png"
+    },
+    {
+      "id": "actor_009_pamela_type",
+      "name": "梅拉儿",
+      "name_en": "La Type",
+      "reference_star": "帕梅拉",
+      "platform": "douyin",
+      "fan_count": "百万级",
+      "style": "热辣健身女神",
+      "style_tags": [
+        "热辣",
+        "健身",
+        "自信",
+        "活力"
+      ],
+      "appearance": {
+        "face_shape": "立体五官，欧美感",
+        "eyes": "深邃大眼，自信",
+        "nose": "高挺直",
+        "lips": "饱满，自信笑容",
+        "skin": "健康小麦色，紧致",
+        "hair": "金色或棕色，高马尾",
+        "body": "健美身材，马甲线，翘臀，168cm"
+      },
+      "personality": [
+        "热辣",
+        "自信",
+        "活力",
+        "健康"
+      ],
+      "ai_prompt": "A hot and spicy fitness Asian goddess resembling Pamela Reif, three-dimensional facial features with European and American feel, deep big eyes confident, high straight nose, full lips with confident smile, healthy wheat-colored skin firm and tight, golden or brown hair high ponytail, fit body with abs and peach butt 168cm, confident and uninhibited, vibrant and healthy, 24 years old, spicy girl, 8k, photorealistic",
+      "prompt_chinese": "热辣健身亚洲女神，类似帕梅拉，立体五官欧美感，深邃大眼自信，高挺直鼻梁，饱满嘴唇自信笑容，健康小麦色紧致肌肤，金色或棕色高马尾，健美身材马甲线翘臀168cm，自信张扬活力健康，24岁，辣妹风，8K超清",
+      "signature_poses": [
+        "自信笑容",
+        "健美pose",
+        "活力姿态",
+        "马甲线展示"
+      ],
+      "best_for": [
+        "健身风",
+        "运动穿搭",
+        "热辣风格"
+      ],
+      "video_style": "热辣活力、健身运动、阳光健康",
+      "created_at": "2026-03-03",
+      "source": "ideakeeper_virtual_models",
+      "image_url": "../data/entities/actor_images/actor_009_pamela_type.png",
+      "image_local_path": "D:\\ai_code4090\\ideakeeper\\ideakeeper\\data\\entities\\actor_images\\actor_009_pamela_type.png",
+      "avatar_url": "../data/entities/actor_images/actor_009_pamela_type.png"
+    }
+  ],
+  "metadata": {
+    "version": "1.0",
+    "total_actors": 9,
+    "created_at": "2026-03-03",
+    "source": "xiaohongshu_tiktok_weibo_top_stars",
+    "description": "9位基于小红书/抖音/微博顶流明星的虚拟模特，用于Ideakeeper商品视频生成"
+  }
+}

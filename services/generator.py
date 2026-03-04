@@ -1,107 +1,104 @@
-"""
-services/generator.py
-
-Uses Playwright to automate Google Gemini Web UI (gemini.google.com) 
-for Image-to-Image garment extraction to avoid hallucinations.
-"""
-
 import os
-import base64
+import json
+import time
 import asyncio
+import requests
 from pathlib import Path
-from playwright.async_api import async_playwright
+
+COMFY_API_URL = os.getenv("COMFY_API_URL", "http://127.0.0.1:8188")
+WORKFLOW_FILE = Path(__file__).parent.parent / "flux_4090_optimized.json"
 
 async def generate_product_photo_async(frame_path: Path, dest_path: Path, description: str = "") -> Path | None:
     """
-    Generates a clean e-commerce product photo by using Playwright to upload the original video frame
-    to Gemini Web (gemini.google.com). This avoids hallucinations by doing explicit visual Image-to-Image extraction.
-    Ensures safe execution within an existing asyncio loop.
+    Generates a clean e-commerce product photo by calling the local ComfyUI API.
+    Uses FLUX.1 optimized for 4090 (FP8) to ensure consistency and performance.
     """
-    profile_dir = Path(os.path.expanduser("~/Documents/ideakeeper/gemini_profile"))
-    profile_dir.mkdir(exist_ok=True, parents=True)
-
-    desc_hint = f"Specific product details to isolate: {description}" if description else "the main clothing item"
-
-    prompt = (
-        f"This is a frame from a video. I need you to extract EXACTLY ONE item: {desc_hint}. "
-        f"Please recreate this exact item precisely as it appears, but isolated on a pure white flat-lay background. "
-        f"Keep every wrinkle, texture, and detail true to the image. Do not hallucinate or change the design. "
-        f"Output ONLY the isolated product image."
-    )
-    
-    print(f"[Gemini Web] Automating Chrome to extract product: {description}")
+    if not WORKFLOW_FILE.exists():
+        print(f"[Generator] Error: Workflow file not found at {WORKFLOW_FILE}")
+        return None
 
     try:
-        async with async_playwright() as p:
-            browser = await p.chromium.launch_persistent_context(
-                user_data_dir=str(profile_dir),
-                headless=False,
-                channel="chrome",
-                args=["--disable-blink-features=AutomationControlled"]
-            )
-            page = await browser.new_page()
+        # 1. Prepare Request to ComfyUI
+        with open(WORKFLOW_FILE, "r", encoding="utf-8") as f:
+            workflow = json.load(f)
+
+        # Update prompt and image path in workflow
+        prompt_text = (
+            f"A professional e-commerce product photo of {description or 'a garment'}, "
+            f"isolated on a pure white flat-lay background. High resolution, studio lighting, "
+            f"visible fabric texture, clean edges."
+        )
+        
+        # ComfyUI LoadImage node (ID 10) can take absolute paths if configured
+        workflow["10"]["inputs"]["image"] = str(frame_path.absolute())
+        workflow["6"]["inputs"]["text"] = prompt_text
+
+        # 2. Queue Prompt
+        print(f"[Generator] Sending request to local ComfyUI at {COMFY_API_URL}")
+        response = requests.post(f"{COMFY_API_URL}/prompt", json={"prompt": workflow})
+        
+        if response.status_code != 200:
+            print(f"[Generator] ComfyUI Error: {response.text}")
+            return None
+        
+        prompt_id = response.json().get("prompt_id")
+        print(f"[Generator] Queued successfully. Prompt ID: {prompt_id}")
+
+        # 3. Poll for completion
+        start_time = time.time()
+        timeout = 300  # 5 minutes for FLUX
+        
+        while time.time() - start_time < timeout:
+            history_url = f"{COMFY_API_URL}/history/{prompt_id}"
+            hist_resp = requests.get(history_url)
             
-            await page.goto("https://gemini.google.com/app")
+            if hist_resp.status_code == 200:
+                history = hist_resp.json()
+                if prompt_id in history:
+                    # Found finished task
+                    outputs = history[prompt_id].get("outputs", {})
+                    # Node "9" is our SaveImage
+                    if "9" in outputs and "images" in outputs["9"]:
+                        image_info = outputs["9"]["images"][0]
+                        
+                        # Fetch the image via /view API
+                        view_url = f"{COMFY_API_URL}/view?filename={image_info['filename']}&subfolder={image_info['subfolder']}&type={image_info['type']}"
+                        img_data = requests.get(view_url).content
+                        
+                        with open(dest_path, "wb") as f:
+                            f.write(img_data)
+                        
+                        print(f"[Generator] ✓ Successfully saved generated product to {dest_path.name}")
+                        return dest_path
             
-            try:
-                await page.wait_for_selector('div[contenteditable="true"]', timeout=3000)
-            except:
-                print("[Gemini Web] ⚠️ Not logged in. Please log in on the opened browser window...")
-                await page.wait_for_selector('div[contenteditable="true"]', timeout=300000)
-                
-            print("[Gemini Web] Loaded Gemini conversation.")
+            await asyncio.sleep(2)
             
-            file_input = page.locator('input[type="file"]')
-            await file_input.set_input_files(str(frame_path))
-            
-            await asyncio.sleep(3)
-            
-            chat_box = page.locator('div[contenteditable="true"]').first
-            await chat_box.focus()
-            await page.keyboard.type(prompt)
-            
-            await page.keyboard.press("Enter")
-            print("[Gemini Web] Prompt submitted. Waiting 30s for image generation...")
-            
-            await asyncio.sleep(30)
-            
-            images = await page.locator('img').all()
-            target_img_url = None
-            for img in reversed(images):
-                src = await img.get_attribute("src")
-                if src and "googleusercontent.com" in src and "avatar" not in src:
-                    target_img_url = src
-                    break
-            
-            if target_img_url:
-                print(f"[Gemini Web] Extracted image URL. Downloading...")
-                b64 = await page.evaluate(f'''async () => {{
-                    const resp = await fetch("{target_img_url}");
-                    const blob = await resp.blob();
-                    return new Promise((resolve, reject) => {{
-                        const reader = new FileReader();
-                        reader.onloadend = () => resolve(reader.result);
-                        reader.onerror = reject;
-                        reader.readAsDataURL(blob);
-                    }});
-                }}''')
-                
-                header, encoded = b64.split(",", 1)
-                dest_path.write_bytes(base64.b64decode(encoded))
-                print(f"[Gemini Web] ✓ Saved product photo: {dest_path.name}")
-                await browser.close()
-                return dest_path
-            else:
-                print("[Gemini Web] ❌ Could not find generated image in UI.")
-                await browser.close()
-                return None
-            
+        print("[Generator] Timeout waiting for ComfyUI.")
+        return None
+
     except Exception as e:
-        print(f"[Gemini Web] Error automating Chrome: {e}")
+        print(f"[Generator] Failed to call local ComfyUI: {e}")
         return None
 
 def generate_product_photo(frame_path: Path, dest_path: Path, description: str = "") -> Path | None:
-    """Synchronous wrapper for internal async call (compatible with current main pipeline)"""
-    return asyncio.run(generate_product_photo_async(frame_path, dest_path, description))
-
-
+    """Synchronous wrapper for main pipeline integration"""
+    try:
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        loop = None
+        
+    if loop and loop.is_running():
+        import threading
+        result = None
+        def _run():
+            nonlocal result
+            try:
+                result = asyncio.run(generate_product_photo_async(frame_path, dest_path, description))
+            except Exception as ex:
+                print(f"[Generator] Thread error: {ex}")
+        t = threading.Thread(target=_run)
+        t.start()
+        t.join()
+        return result
+    else:
+        return asyncio.run(generate_product_photo_async(frame_path, dest_path, description))

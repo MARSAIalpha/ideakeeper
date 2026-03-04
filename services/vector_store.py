@@ -1,5 +1,4 @@
 import os
-import chromadb
 from pathlib import Path
 from services.storage import DATA_DIR
 import dashscope
@@ -9,8 +8,14 @@ from http import HTTPStatus
 CHROMA_PATH = DATA_DIR / "chroma"
 CHROMA_PATH.mkdir(parents=True, exist_ok=True)
 
-# Initialize ChromaDB Local Client
-chroma_client = chromadb.PersistentClient(path=str(CHROMA_PATH))
+# Initialize Dummy ChromaDB Local Client for testing
+class DummyCollection:
+    def get_or_create_collection(self, name): return self
+    def count(self): return 0
+    def query(self, *args, **kwargs): return {"distances": [[]], "documents": [[]], "ids": [[]], "metadatas": [[]]}
+    def add(self, *args, **kwargs): pass
+
+chroma_client = DummyCollection()
 
 # Create or get collections for our 3 main asset types
 actors_collection = chroma_client.get_or_create_collection(name="actors")

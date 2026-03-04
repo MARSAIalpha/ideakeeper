@@ -36,7 +36,7 @@ def extract_keyframes(video_path: Path, output_dir: Path, frames_per_second: flo
             seconds = i * interval
             new_name = f"time_{seconds:07.2f}s.jpg"
             new_path = path.parent / new_name
-            path.rename(new_path)
+            path.replace(new_path)
             renamed_paths.append(new_path)
             
         print(f"[*] Extracted and timestamped {len(renamed_paths)} keyframes.")

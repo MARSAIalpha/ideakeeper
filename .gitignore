@@ -3,7 +3,6 @@ __pycache__/
 *.mp4
 *.mp3
 *.png
-*.jpg
 venv/
 .DS_Store
 .env
@@ -16,3 +15,30 @@ debug_*.txt
 *.log
 test_*.py
 test_*.html
+net_*.txt
+error*.txt
+log_taobao.py
+shortlink.html
+*.jpg
+*.json
+!comfy_workflow_default.json
+!flux_4090_optimized.json
+!models.json
+
+# Temporary and crawl files
+tmp_test/
+debug_*.html
+debug_*.jpg
+xhs.html
+taobao_page.html
+shortlink.html
+douyin_mall.html
+net_*.txt
+error*.txt
+*.log
+
+# Databases and large data (handled by data/ ignore at top but being explicit)
+data/assets.db
+data/entity_store.db
+data/chroma/
+data/2026-*/

@@ -22,8 +22,10 @@
             </div>
             <ul class="nav-links">
                 <li class="active" data-tab="dashboard">Dashboard</li>
-                <li data-tab="actors">Virtual Actors</li>
+                <li data-tab="actors"><a href="/frontend/actor_manager.html" style="color: inherit; text-decoration: none;">🎭 Virtual Actors</a></li>
                 <li data-tab="clothes">🛍 Product Library</li>
+                <li data-tab="video"><a href="/frontend/video_generator.html"
+                        style="color: inherit; text-decoration: none;">🎬 Video Generator</a></li>
                 <li data-tab="scenes">Scene Library</li>
             </ul>
             <div class="user-profile">
@@ -65,28 +67,15 @@
                 </div>
 
                 <div class="header-actions">
+                    <button class="btn-secondary" id="btn-import-link" style="margin-right: 0.5rem;">
+                        <i class="fas fa-plus"></i> Import Link
+                    </button>
                     <button class="btn-primary" id="btn-generate">Generate Video Pipeline</button>
                 </div>
             </header>
 
             <div class="scroll-area">
-                <!-- Stats Overview -->
-                <section class="stats-grid" id="stats-view">
-                    <div class="stat-card">
-                        <div class="stat-icon clothes-icon"></div>
-                        <div class="stat-details">
-                            <h3>Saved Clothes</h3>
-                            <p id="count-clothes">0</p>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon scenes-icon"></div>
-                        <div class="stat-details">
-                            <h3>Background Scenes</h3>
-                            <p id="count-scenes">0</p>
-                        </div>
-                    </div>
-                </section>
+
 
                 <!-- Dynamic Content Grids -->
                 <section class="gallery-container hidden" id="actors-view">
@@ -108,6 +97,7 @@
                                     <th>Category</th>
                                     <th>Style</th>
                                     <th>Color</th>
+                                    <th>Images</th>
                                     <th>Posts</th>
                                 </tr>
                             </thead>
@@ -123,22 +113,39 @@
                     <div class="gallery-grid" id="grid-scenes"></div>
                 </section>
 
-                <tbody id="kb-tbody"></tbody>
-                </table>
-                <div class="kb-empty hidden" id="kb-empty">
-                    No entries yet. Send a link to the webhook to start building.
-                </div>
-            </div>
-            </section>
+                <section class="gallery-container hidden" id="kb-view">
+                    <div class="kb-toolbar" style="margin-bottom: 1rem;">
+                        <h3 style="color: white; margin: 0;">Knowledge Base feed</h3>
+                        <span class="kb-count" id="kb-count">0 items</span>
 
-            <!-- Dashboard Combined View -->
-            <section class="dashboard-sections" id="dashboard-view">
-                <div style="padding: 2rem; color: var(--text-secondary)">
-                    Initializing intelligence feed...
-                </div>
-            </section>
-    </div>
-    </main>
+                        <div class="kb-filters" style="margin-top: 1rem; display: flex; gap: 0.5rem;">
+                            <button class="kb-filter-btn active" data-filter="posts">Posts</button>
+                            <button class="kb-filter-btn" data-filter="actors">Actors</button>
+                            <button class="kb-filter-btn" data-filter="clothes">Clothes</button>
+                            <button class="kb-filter-btn" data-filter="scenes">Scenes</button>
+                        </div>
+                    </div>
+                    <div class="kb-table-wrapper" style="max-height: calc(100vh - 200px);">
+                        <table class="kb-table" id="kb-table">
+                            <thead id="kb-thead">
+                                <!-- Populated dynamically based on filter -->
+                            </thead>
+                            <tbody id="kb-tbody"></tbody>
+                        </table>
+                        <div class="kb-empty hidden" id="kb-empty">
+                            No entries yet. Send a link to the webhook to start building.
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Dashboard Combined View -->
+                <section class="dashboard-sections" id="dashboard-view">
+                    <div style="padding: 2rem; color: var(--text-secondary)">
+                        Initializing intelligence feed...
+                    </div>
+                </section>
+            </div>
+        </main>
     </div>
 
     <!-- Video Detail Modal -->
@@ -234,44 +241,67 @@
                     }</div>
             </div>
         </div>
+    </div>
 
-        <!-- Mobile Bottom Tab Bar -->
-        <nav class="bottom-tab-bar" id="bottom-tabs">
-            <button class="tab-item active" data-tab="dashboard">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-                    <polyline points="9 22 9 12 15 12 15 22" />
-                </svg>
-                <span>Home</span>
-            </button>
-            <button class="tab-item" data-tab="search-tab">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="11" cy="11" r="8" />
-                    <path d="m21 21-4.3-4.3" />
-                </svg>
-                <span>Search</span>
-            </button>
-            <button class="tab-item tab-add" id="btn-add-mobile">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                    <line x1="12" y1="5" x2="12" y2="19" />
-                    <line x1="5" y1="12" x2="19" y2="12" />
-                </svg>
-            </button>
-            <button class="tab-item" data-tab="kb">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-                </svg>
-                <span>Library</span>
-            </button>
-            <button class="tab-item" data-tab="clothes">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
-                    <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
-                </svg>
-                <span>Assets</span>
-            </button>
-        </nav>
+    <!-- Mobile Bottom Tab Bar -->
+    <nav class="bottom-tab-bar" id="bottom-tabs">
+        <button class="tab-item active" data-tab="dashboard">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                <polyline points="9 22 9 12 15 12 15 22" />
+            </svg>
+            <span>Home</span>
+        </button>
+        <button class="tab-item" data-tab="search-tab">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8" />
+                <path d="m21 21-4.3-4.3" />
+            </svg>
+            <span>Search</span>
+        </button>
+        <button class="tab-item tab-add" id="btn-add-mobile">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+        </button>
+        <button class="tab-item" data-tab="kb">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+            </svg>
+            <span>Library</span>
+        </button>
+        <button class="tab-item" data-tab="clothes">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
+                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
+            </svg>
+            <span>Assets</span>
+        </button>
+    </nav>
+
+    <!-- Import Link Modal -->
+    <div class="modal-overlay hidden" id="modal-import-link">
+        <div class="modal" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3>Import New Asset</h3>
+                <button class="close-modal">×</button>
+            </div>
+            <div class="modal-body" style="padding: 2rem;">
+                <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">Paste a link from Taobao, Tmall, or
+                    Xiaohongshu to start the extraction pipeline.</p>
+                <div class="form-group" style="margin-bottom: 1.5rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; color: white;">URL</label>
+                    <input type="text" id="import-url-input" placeholder="https://..."
+                        style="width: 100%; padding: 0.8rem; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-main); color: white;">
+                </div>
+                <div id="import-status"
+                    style="margin-bottom: 1.5rem; padding: 0.8rem; border-radius: 8px; font-size: 0.9rem; display: none;">
+                </div>
+                <button class="btn-primary" id="btn-do-import" style="width: 100%;">Start Extraction</button>
+            </div>
+        </div>
     </div>
 
     <script src="/frontend/app.js"></script>

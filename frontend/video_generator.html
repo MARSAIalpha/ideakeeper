@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>视频生成器 | AI Studio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/frontend/styles.css">
+    <style>
+        .video-generator {
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .generator-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            color: white;
+        }
+        
+        .generator-header h1 {
+            margin: 0 0 0.5rem 0;
+            font-size: 2rem;
+        }
+        
+        .generator-header p {
+            margin: 0;
+            opacity: 0.9;
+        }
+        
+        .clothes-selector {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .clothes-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            border: 2px solid transparent;
+        }
+        
+        .clothes-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        
+        .clothes-card.selected {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.3);
+        }
+        
+        .clothes-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            background: #f5f5f5;
+        }
+        
+        .clothes-info {
+            padding: 1rem;
+        }
+        
+        .clothes-info h3 {
+            margin: 0 0 0.5rem 0;
+            font-size: 1rem;
+            color: #333;
+        }
+        
+        .clothes-meta {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        
+        .tag {
+            background: #f0f0f0;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            color: #666;
+        }
+        
+        .style-selector {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .style-selector h2 {
+            margin: 0 0 1rem 0;
+            color: #333;
+        }
+        
+        .style-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+        
+        .style-card {
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .style-card:hover {
+            border-color: #667eea;
+        }
+        
+        .style-card.selected {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.05);
+        }
+        
+        .style-card h4 {
+            margin: 0 0 0.5rem 0;
+            color: #333;
+        }
+        
+        .style-card p {
+            margin: 0;
+            font-size: 0.85rem;
+            color: #666;
+        }
+        
+        .style-card .platform {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            margin-top: 0.5rem;
+        }
+        
+        .actor-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 1rem;
+        }
+        
+        .actor-card {
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+        
+        .actor-card:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+        }
+        
+        .actor-card.selected {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+        }
+        
+        .actor-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0 auto 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        
+        .actor-card h4 {
+            margin: 0 0 0.25rem 0;
+            font-size: 0.9rem;
+            color: #333;
+        }
+        
+        .actor-card .reference {
+            font-size: 0.75rem;
+            color: #999;
+            margin-bottom: 0.25rem;
+        }
+        
+        .actor-card .style-tag {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 0.15rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            margin-top: 0.25rem;
+        }
+        
+        .actor-card .platform {
+            font-size: 0.7rem;
+            color: #667eea;
+            margin-top: 0.25rem;
+        }
+        
+        .prompt-preview {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1rem;
+            font-family: monospace;
+            font-size: 0.85rem;
+            color: #333;
+            max-height: 150px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            width: 100%;
+            transition: opacity 0.2s;
+        }
+        
+        .generate-btn:hover {
+            opacity: 0.9;
+        }
+        
+        .generate-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .video-plans {
+            margin-top: 2rem;
+        }
+        
+        .plan-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .plan-card h3 {
+            margin: 0 0 1rem 0;
+            color: #333;
+        }
+        
+        .plan-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .plan-detail {
+            background: #f8f9fa;
+            padding: 0.75rem;
+            border-radius: 6px;
+        }
+        
+        .plan-detail label {
+            font-size: 0.75rem;
+            color: #666;
+            display: block;
+            margin-bottom: 0.25rem;
+        }
+        
+        .plan-detail value {
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .plan-images {
+            display: flex;
+            gap: 0.5rem;
+            overflow-x: auto;
+            padding: 0.5rem 0;
+        }
+        
+        .plan-images img {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <nav class="sidebar">
+            <div class="logo">
+                <div class="logo-icon"></div>
+                <h1>AI Studio<span>.</span></h1>
+            </div>
+            <ul class="nav-links">
+                <li data-tab="dashboard"><a href="/frontend/index.html" style="color: inherit; text-decoration: none;">Dashboard</a></li>
+                <li data-tab="actors"><a href="/frontend/index.html#actors" style="color: inherit; text-decoration: none;">Virtual Actors</a></li>
+                <li data-tab="clothes"><a href="/frontend/index.html#clothes" style="color: inherit; text-decoration: none;">🛍 Product Library</a></li>
+                <li class="active" data-tab="video">🎬 Video Generator</li>
+                <li data-tab="scenes"><a href="/frontend/index.html#scenes" style="color: inherit; text-decoration: none;">Scene Library</a></li>
+            </ul>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="video-generator">
+                <!-- Header -->
+                <div class="generator-header">
+                    <h1><i class="fas fa-video"></i> XHS/抖音视频生成器（含9位顶流虚拟模特）</h1>
+                    <p>选择衣服、风格和虚拟模特，一键生成爆款视频方案</p>
+                </div>
+
+                <!-- Clothes Selector -->
+                <h2 style="margin-bottom: 1rem; color: #333;">1. 选择衣服</h2>
+                <div class="clothes-selector" id="clothes-selector">
+                    <!-- 动态加载 -->
+                </div>
+
+                <!-- Style Selector -->
+                <div class="style-selector">
+                    <h2>2. 选择视频风格</h2>
+                    <div class="style-grid" id="style-grid">
+                        <div class="style-card" data-style="elegant">
+                            <h4>优雅慢展</h4>
+                            <p>轻柔法式音乐，慢速平移</p>
+                            <span class="platform">XHS</span>
+                        </div>
+                        <div class="style-card" data-style="fast">
+                            <h4>卡点快剪 🔥</h4>
+                            <p>抖音热门BGM，快速切换</p>
+                            <span class="platform">抖音</span>
+                        </div>
+                        <div class="style-card" data-style="detail">
+                            <h4>细节特写</h4>
+                            <p>微距镜头，展现工艺</p>
+                            <span class="platform">XHS/抖音</span>
+                        </div>
+                        <div class="style-card" data-style="scene">
+                            <h4>场景氛围 🔥</h4>
+                            <p>巴黎/咖啡厅，电影感</p>
+                            <span class="platform">XHS</span>
+                        </div>
+                        <div class="style-card" data-style="transform">
+                            <h4>变装对比 🔥</h4>
+                            <p>Before/After，强烈对比</p>
+                            <span class="platform">抖音</span>
+                        </div>
+                        <div class="style-card" data-style="ootd">
+                            <h4>OOTD穿搭 👗</h4>
+                            <p>今日穿搭分享，日常时尚</p>
+                            <span class="platform">XHS/抖音</span>
+                        </div>
+                        <div class="style-card" data-style="milan">
+                            <h4>米兰时装周 🕶️</h4>
+                            <p>T台走秀，高级感大片</p>
+                            <span class="platform">XHS</span>
+                        </div>
+                        <div class="style-card" data-style="hotel">
+                            <h4>酒店打卡 🏨</h4>
+                            <p>奢华生活记录，精致vlog</p>
+                            <span class="platform">XHS</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Virtual Actors Selector -->
+                <div class="style-selector">
+                    <h2>3. 选择虚拟模特（基于小红书/抖音/微博顶流）</h2>
+                    <div class="actor-grid" id="actor-grid">
+                        <!-- 动态加载 -->
+                    </div>
+                </div>
+
+                <!-- Generate Button -->
+                <button class="generate-btn" id="generate-btn" disabled>
+                    <i class="fas fa-magic"></i> 生成视频方案
+                </button>
+
+                <!-- Video Plans -->
+                <div class="video-plans" id="video-plans"></div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // 加载衣服数据
+        async function loadClothes() {
+            try {
+                const response = await fetch('/data/entities/clothes.json');
+                const clothes = await response.json();
+                renderClothes(clothes);
+            } catch (error) {
+                console.error('加载失败:', error);
+            }
+        }
+
+        // 渲染衣服卡片
+        function renderClothes(clothes) {
+            const container = document.getElementById('clothes-selector');
+            container.innerHTML = '';
+
+            Object.entries(clothes).forEach(([id, item]) => {
+                const card = document.createElement('div');
+                card.className = 'clothes-card';
+                card.dataset.id = id;
+                
+                const imgUrl = item.gallery_urls[0] || '';
+                
+                card.innerHTML = `
+                    <img class="clothes-image" src="${imgUrl}" alt="${item.display_name}" onerror="this.style.display='none'">
+                    <div class="clothes-info">
+                        <h3>${item.display_name}</h3>
+                        <div class="clothes-meta">
+                            <span class="tag">${item.category}</span>
+                            <span class="tag">${item.style_class}</span>
+                            <span class="tag">${item.color}</span>
+                            <span class="tag">${item.gallery_urls.length}张图</span>
+                        </div>
+                    </div>
+                `;
+                
+                card.addEventListener('click', () => selectClothes(card, id, item));
+                container.appendChild(card);
+            });
+        }
+
+        // 选择衣服
+        let selectedClothes = null;
+        function selectClothes(card, id, item) {
+            document.querySelectorAll('.clothes-card').forEach(c => c.classList.remove('selected'));
+            card.classList.add('selected');
+            selectedClothes = { id, ...item };
+            checkCanGenerate();
+        }
+
+        // 选择风格
+        let selectedStyle = null;
+        document.querySelectorAll('.style-card').forEach(card => {
+            card.addEventListener('click', () => {
+                document.querySelectorAll('.style-card').forEach(c => c.classList.remove('selected'));
+                card.classList.add('selected');
+                selectedStyle = card.dataset.style;
+                checkCanGenerate();
+            });
+        });
+
+        // 检查是否可以生成
+        function checkCanGenerate() {
+            const btn = document.getElementById('generate-btn');
+            btn.disabled = !(selectedClothes && selectedStyle);
+        }
+
+        // 生成视频方案
+        document.getElementById('generate-btn').addEventListener('click', () => {
+            if (!selectedClothes || !selectedStyle) return;
+            
+            const plan = generatePlan(selectedClothes, selectedStyle);
+            renderPlan(plan);
+        });
+
+        // 生成方案
+        function generatePlan(clothes, style) {
+            const styleConfig = {
+                elegant: {
+                    name: '优雅慢展',
+                    platform: 'XHS',
+                    duration: '8-10秒',
+                    music: '轻柔法式音乐',
+                    effect: '慢速平移+淡入淡出',
+                    text: '这件裙子也太仙了吧✨',
+                    tips: '适合种草，展现衣服质感'
+                },
+                fast: {
+                    name: '卡点快剪',
+                    platform: '抖音',
+                    duration: '5-7秒',
+                    music: '抖音热门BGM',
+                    effect: '快速切换+震动特效',
+                    text: '2026必入款！',
+                    tips: '最容易爆，流量密码'
+                },
+                detail: {
+                    name: '细节特写',
+                    platform: 'XHS/抖音',
+                    duration: '6-8秒',
+                    music: 'ASMR或轻音乐',
+                    effect: '微距镜头+慢动作',
+                    text: '看这蕾丝细节💕',
+                    tips: '展现工艺，增加信任'
+                },
+                scene: {
+                    name: '场景氛围',
+                    platform: 'XHS',
+                    duration: '10-15秒',
+                    music: '浪漫法语歌',
+                    effect: '电影感滤镜',
+                    text: '穿上就是巴黎女人',
+                    tips: 'XHS最爱，种草利器'
+                },
+                transform: {
+                    name: '变装对比',
+                    platform: '抖音',
+                    duration: '7-10秒',
+                    music: '强烈节奏电音',
+                    effect: '快速切换+闪光',
+                    text: '改造前vs改造后',
+                    tips: '最容易爆的玩法'
+                }
+            };
+            
+            const config = styleConfig[style];
+            
+            return {
+                clothes: clothes.display_name,
+                style: config.name,
+                platform: config.platform,
+                duration: config.duration,
+                music: config.music,
+                effect: config.effect,
+                text: config.text,
+                tips: config.tips,
+                images: clothes.gallery_urls.slice(0, 5)
+            };
+        }
+
+        // 渲染方案
+        function renderPlan(plan) {
+            const container = document.getElementById('video-plans');
+            
+            const card = document.createElement('div');
+            card.className = 'plan-card';
+            card.innerHTML = `
+                <h3>🎬 ${plan.clothes} - ${plan.style}</h3>
+                <div class="plan-details">
+                    <div class="plan-detail">
+                        <label>平台</label>
+                        <value>${plan.platform}</value>
+                    </div>
+                    <div class="plan-detail">
+                        <label>时长</label>
+                        <value>${plan.duration}</value>
+                    </div>
+                    <div class="plan-detail">
+                        <label>音乐</label>
+                        <value>${plan.music}</value>
+                    </div>
+                    <div class="plan-detail">
+                        <label>特效</label>
+                        <value>${plan.effect}</value>
+                    </div>
+                </div>
+                <div class="plan-detail" style="margin-bottom: 1rem;">
+                    <label>文案</label>
+                    <value style="font-size: 1.1rem; color: #667eea;">${plan.text}</value>
+                </div>
+                <div class="plan-detail" style="margin-bottom: 1rem;">
+                    <label>制作建议</label>
+                    <value>${plan.tips}</value>
+                </div>
+                <div class="plan-images">
+                    ${plan.images.map(img => `<img src="${img}" onerror="this.style.display='none'">`).join('')}
+                </div>
+            `;
+            
+            container.insertBefore(card, container.firstChild);
+        }
+
+        // 加载虚拟模特数据
+        async function loadActors() {
+            try {
+                const response = await fetch('/data/entities/actors.json');
+                const data = await response.json();
+                renderActors(data.actors);
+            } catch (error) {
+                console.error('加载虚拟模特失败:', error);
+            }
+        }
+
+        // 渲染虚拟模特卡片
+        function renderActors(actors) {
+            const container = document.getElementById('actor-grid');
+            if (!container || !actors) return;
+            
+            container.innerHTML = '';
+            
+            actors.forEach(actor => {
+                const card = document.createElement('div');
+                card.className = 'actor-card';
+                card.dataset.id = actor.id;
+                
+                card.innerHTML = `
+                    <div class="actor-avatar">${actor.name.charAt(0)}</div>
+                    <h4>${actor.name}</h4>
+                    <div class="reference">参考: ${actor.reference_star}</div>
+                    <span class="style-tag">${actor.style}</span>
+                    <div class="platform">${actor.platform} · ${actor.fan_count}</div>
+                `;
+                
+                card.addEventListener('click', () => selectActor(card, actor));
+                container.appendChild(card);
+            });
+        }
+
+        // 选择虚拟模特
+        let selectedActor = null;
+        function selectActor(card, actor) {
+            document.querySelectorAll('.actor-card').forEach(c => c.classList.remove('selected'));
+            card.classList.add('selected');
+            selectedActor = actor;
+            
+            // 显示Prompt预览
+            showPromptPreview(actor);
+            checkCanGenerate();
+        }
+
+        // 显示Prompt预览
+        function showPromptPreview(actor) {
+            const container = document.getElementById('video-plans');
+            const preview = document.createElement('div');
+            preview.className = 'plan-card';
+            preview.id = 'actor-preview';
+            preview.innerHTML = `
+                <h3>🎭 ${actor.name} - AI Prompt预览</h3>
+                <div class="prompt-preview">${actor.ai_prompt}</div>
+                <div style="margin-top: 1rem;">
+                    <strong>中文描述:</strong> ${actor.prompt_chinese}
+                </div>
+                <div style="margin-top: 0.5rem;">
+                    <strong>招牌动作:</strong> ${actor.signature_poses.join('、')}
+                </div>
+                <div style="margin-top: 0.5rem;">
+                    <strong>适合风格:</strong> ${actor.best_for.join('、')}
+                </div>
+            `;
+            
+            // 移除旧的预览
+            const oldPreview = document.getElementById('actor-preview');
+            if (oldPreview) oldPreview.remove();
+            
+            container.insertBefore(preview, container.firstChild);
+        }
+
+        // 修改检查生成条件
+        function checkCanGenerate() {
+            const btn = document.getElementById('generate-btn');
+            btn.disabled = !(selectedClothes && selectedStyle && selectedActor);
+        }
+
+        // 修改生成方案函数
+        function generatePlan(clothes, style) {
+            const styleConfig = {
+                elegant: {
+                    name: '优雅慢展',
+                    platform: 'XHS',
+                    duration: '15秒',
+                    music: '轻柔法式音乐',
+                    effect: '慢速平移+淡入淡出',
+                    text: `这件${clothes.display_name}也太仙了吧✨`,
+                    tips: '适合种草，展现衣服质感'
+                },
+                fast: {
+                    name: '卡点快剪 🔥',
+                    platform: '抖音',
+                    duration: '15秒',
+                    music: '抖音热门BGM',
+                    effect: '快速切换+震动特效',
+                    text: `2026必入款！${clothes.display_name}`,
+                    tips: '最容易爆，流量密码'
+                },
+                detail: {
+                    name: '细节特写',
+                    platform: 'XHS/抖音',
+                    duration: '15秒',
+                    music: 'ASMR或轻音乐',
+                    effect: '微距镜头+慢动作',
+                    text: `看这${clothes.display_name}的细节💕`,
+                    tips: '展现工艺，增加信任'
+                },
+                scene: {
+                    name: '场景氛围 🔥',
+                    platform: 'XHS',
+                    duration: '15秒',
+                    music: '浪漫法语歌',
+                    effect: '电影感滤镜',
+                    text: `穿上${clothes.display_name}就是巴黎女人`,
+                    tips: 'XHS最爱，种草利器'
+                },
+                transform: {
+                    name: '变装对比 🔥',
+                    platform: '抖音',
+                    duration: '15秒',
+                    music: '强烈节奏电音',
+                    effect: '快速切换+闪光',
+                    text: `${clothes.display_name}改造前vs改造后`,
+                    tips: '最容易爆的玩法'
+                },
+                ootd: {
+                    name: 'OOTD穿搭 👗',
+                    platform: 'XHS/抖音',
+                    duration: '15秒',
+                    music: '时尚轻快BGM',
+                    effect: '日常街拍风+文字标注',
+                    text: `今日份OOTD💫 ${clothes.display_name}穿搭分享`,
+                    tips: 'OOTD是永恒流量密码，记得标注品牌/价格',
+                    scenes: ['对镜自拍', '全身展示', '单品特写', '搭配展示'],
+                    prompt_addition: 'daily street style, mirror selfie, casual fashion, urban background, natural lighting, relatable and approachable'
+                },
+                milan: {
+                    name: '米兰时装周 🕶️',
+                    platform: 'XHS',
+                    duration: '15秒',
+                    music: '高端时尚秀场音乐',
+                    effect: 'T台走秀感+慢动作+高级滤镜',
+                    text: `${clothes.display_name} | 把时装周穿在身上✨`,
+                    tips: '强调高级感、设计感，适合展示独特单品',
+                    scenes: ['T台走秀', '后台准备', '街拍时刻', '观众席视角'],
+                    prompt_addition: 'Milan Fashion Week runway style, high fashion editorial, dramatic lighting, haute couture atmosphere, professional model walk, backstage glamour, luxury fashion show'
+                },
+                hotel: {
+                    name: '酒店打卡 🏨',
+                    platform: 'XHS',
+                    duration: '15秒',
+                    music: '慵懒爵士/Chill音乐',
+                    effect: '奢华生活感+精致vlog风格',
+                    text: `${clothes.display_name} | 精致女孩的酒店时光🥂`,
+                    tips: '展现生活方式，强调精致感和松弛感',
+                    scenes: ['酒店房间', '大堂/电梯', '下午茶', '窗边 view'],
+                    prompt_addition: 'luxury hotel lifestyle, elegant afternoon tea, sophisticated interior, natural light from window, relaxed and refined atmosphere, high-end living, premium hotel suite'
+                }
+            };
+            
+            const config = styleConfig[style];
+            
+            // 根据风格添加额外的Prompt
+            let actorPrompt = selectedActor.ai_prompt;
+            if (config.prompt_addition) {
+                actorPrompt = actorPrompt.replace('8k, photorealistic', `${config.prompt_addition}, 8k, photorealistic`);
+            }
+            
+            return {
+                clothes: clothes.display_name,
+                actor: selectedActor.name,
+                actor_reference: selectedActor.reference_star,
+                style: config.name,
+                platform: config.platform,
+                duration: config.duration,
+                music: config.music,
+                effect: config.effect,
+                text: config.text,
+                tips: config.tips,
+                scenes: config.scenes || ['前3秒钩子', '中段展示', '后3秒转化'],
+                ai_prompt: actorPrompt,
+                signature_poses: selectedActor.signature_poses,
+                images: clothes.gallery_urls.slice(0, 5)
+            };
+        }
+
+        // 修改渲染方案函数
+        function renderPlan(plan) {
+            const container = document.getElementById('video-plans');
+            
+            const scenesHtml = plan.scenes.map((scene, idx) => `
+                <div style="background: #f8f9fa; padding: 0.5rem; border-radius: 4px; margin-bottom: 0.5rem;">
+                    <strong>场景${idx + 1}:</strong> ${scene}
+                </div>
+            `).join('');
+            
+            const card = document.createElement('div');
+            card.className = 'plan-card';
+            card.style.border = '2px solid #667eea';
+            card.innerHTML = `
+                <h3>🎬 ${plan.clothes} × ${plan.actor}</h3>
+                <div style="background: #f0f0f0; padding: 0.5rem; border-radius: 4px; margin-bottom: 1rem;">
+                    <strong>🎭 虚拟模特:</strong> ${plan.actor}（参考: ${plan.actor_reference}）
+                </div>
+                <div class="plan-details">
+                    <div class="plan-detail">
+                        <label>风格</label>
+                        <value>${plan.style}</value>
+                    </div>
+                    <div class="plan-detail">
+                        <label>平台</label>
+                        <value>${plan.platform}</value>
+                    </div>
+                    <div class="plan-detail">
+                        <label>时长</label>
+                        <value>${plan.duration}</value>
+                    </div>
+                    <div class="plan-detail">
+                        <label>音乐</label>
+                        <value>${plan.music}</value>
+                    </div>
+                </div>
+                <div class="plan-detail" style="margin-bottom: 1rem;">
+                    <label>文案</label>
+                    <value style="font-size: 1.1rem; color: #667eea;">${plan.text}</value>
+                </div>
+                <div class="plan-detail" style="margin-bottom: 1rem;">
+                    <label>分镜场景建议</label>
+                    ${scenesHtml}
+                </div>
+                <div class="plan-detail" style="margin-bottom: 1rem;">
+                    <label>AI Prompt（在即梦使用）</label>
+                    <div class="prompt-preview">${plan.ai_prompt}</div>
+                </div>
+                <div class="plan-detail" style="margin-bottom: 1rem;">
+                    <label>招牌动作</label>
+                    <value>${plan.signature_poses.join('、')}</value>
+                </div>
+                <div class="plan-detail" style="margin-bottom: 1rem;">
+                    <label>制作建议</label>
+                    <value>${plan.tips}</value>
+                </div>
+                <div class="plan-images">
+                    ${plan.images.map(img => `<img src="${img}" onerror="this.style.display='none'">`).join('')}
+                </div>
+            `;
+            
+            // 插入到预览之后
+            const preview = document.getElementById('actor-preview');
+            if (preview && preview.nextSibling) {
+                container.insertBefore(card, preview.nextSibling);
+            } else {
+                container.insertBefore(card, container.firstChild);
+            }
+        }
+
+        // 初始化
+        loadClothes();
+        loadActors();
+    </script>
+</body>
+</html>

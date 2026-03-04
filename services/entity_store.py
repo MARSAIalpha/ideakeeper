@@ -104,21 +104,31 @@ def delete_actor(actor_id: str) -> bool:
 #  CLOTHES ENTITIES
 # ─────────────────────────────────────────────
 
-def upsert_clothes(render_url: str, classification: dict, description: str, post_id: str) -> str:
+def upsert_clothes(render_url: str, classification: dict, description: str, post_id: str, clothes_id: str = None) -> str:
     """
     Insert or update a clothes entity. Returns the clothes_id.
-    Deguplicates by category + style_class + color combination.
+    Deduplicates by category + style_class + color combination OR by explicit clothes_id.
     Accumulates render_urls into gallery_urls.
     """
     clothes = _load(CLOTHES_FILE)
-    key = f"{classification.get('category')}_{classification.get('style_class')}_{classification.get('color')}"
-    display_name = classification.get('display_name', f"{classification.get('color', '')} {classification.get('category', 'Clothes')} ({classification.get('style_class', '')})")
+    
+    if clothes_id:
+        # If an explicit ID is provided, we ONLY update that ID if it exists.
+        # Otherwise, we create a new entry with this ID.
+        existing_id = clothes_id if clothes_id in clothes else None
+    else:
+        # Fallback to dedup key ONLY if no explicit ID was provided
+        key = f"{classification.get('category')}_{classification.get('style_class')}_{classification.get('color')}"
+        existing_id = None
+        for cid, c in clothes.items():
+            if c.get("dedup_key") == key:
+                existing_id = cid
+                break
+        
+        if not existing_id:
+            clothes_id = hashlib.md5(key.encode()).hexdigest()[:10]
 
-    existing_id = None
-    for cid, c in clothes.items():
-        if c.get("dedup_key") == key:
-            existing_id = cid
-            break
+    display_name = classification.get('display_name', f"{classification.get('color', '')} {classification.get('category', 'Clothes')} ({classification.get('style_class', '')})")
 
     if existing_id:
         c = clothes[existing_id]
@@ -130,33 +140,39 @@ def upsert_clothes(render_url: str, classification: dict, description: str, post
         if not gallery and c.get("render_url"):
             gallery = [c["render_url"]]
         
-        if render_url not in gallery:
+        if render_url and render_url not in gallery:
             gallery.append(render_url)
         c["gallery_urls"] = gallery
         
         # If the main render_url is missing, set it
-        if not c.get("render_url"):
+        if not c.get("render_url") and render_url:
             c["render_url"] = render_url
+            
+        if classification.get("attributes"):
+            c["attributes"] = classification["attributes"]
             
         clothes[existing_id] = c
         _save(CLOTHES_FILE, clothes)
         return existing_id
     else:
-        clothes_id = hashlib.md5(key.encode()).hexdigest()[:10]
-        clothes[clothes_id] = {
+        new_entry = {
             "clothes_id": clothes_id,
             "display_name": display_name,
-            "dedup_key": key,
+            "dedup_key": f"{classification.get('category')}_{classification.get('style_class')}_{classification.get('color')}",
             "category": classification.get("category", "Other"),
             "style_class": classification.get("style_class", "Other"),
             "color": classification.get("color", "Unknown"),
             "description": description,
             "render_url": render_url,
-            "gallery_urls": [render_url],
+            "gallery_urls": [render_url] if render_url else [],
             "source_keyframe": classification.get("source_keyframe", ""),
             "appeared_in": [post_id],
             "created_at": datetime.now().isoformat()
         }
+        if classification.get("attributes"):
+            new_entry["attributes"] = classification["attributes"]
+            
+        clothes[clothes_id] = new_entry
         _save(CLOTHES_FILE, clothes)
         return clothes_id
 
